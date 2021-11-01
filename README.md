@@ -151,6 +151,8 @@ spleen_8x16 <- read_hex(system.file("fonts/spleen/spleen-8x16.hex.gz",
                                     package = "bittermelon"))
 fixed_4x6 <- read_yaff(system.file("fonts/fixed/4x6.yaff.gz", 
                                    package = "bittermelon"))
+fixed_5x8 <- read_yaff(system.file("fonts/fixed/5x8.yaff.gz", 
+                                   package = "bittermelon"))
 fixed_6x13 <- read_yaff(system.file("fonts/fixed/6x13.yaff.gz", 
                                     package = "bittermelon"))
 as_bm_bitmap("RSTATS", font = spleen_8x16) |> bm_compress("v")
@@ -175,6 +177,17 @@ as_bm_bitmap("RSTATS", font = fixed_4x6) |> bm_compress("v")
 █▀▄ ▄▀▀ ▀█▀ ▄▀▄ ▀█▀ ▄▀▀ 
 █▀▄  ▀▄  █  █▀█  █   ▀▄ 
 ▀ ▀ ▀▀   ▀  ▀ ▀  ▀  ▀▀  
+```
+
+```r
+as_bm_bitmap("RSTATS", font = fixed_5x8) |> bm_compress("v")
+```
+
+```{.bitmap}
+▄▄▄   ▄▄   ▄▄▄  ▄▄   ▄▄▄  ▄▄  
+█  █ ▀▄ ▀   █  █  █   █  ▀▄ ▀ 
+█▀▀▄ ▄ ▀▄   █  █▀▀█   █  ▄ ▀▄ 
+▀  ▀  ▀▀    ▀  ▀  ▀   ▀   ▀▀  
 ```
 
 ```r
@@ -204,7 +217,7 @@ system.time(font <- unifont()) # Unifont is a **big** font
 
 ```{.bitmap}
    user  system elapsed 
- 55.912   0.056  55.970 
+ 60.958   0.072  61.036 
 ```
 
 ```r

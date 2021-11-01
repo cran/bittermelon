@@ -1,11 +1,10 @@
 """
 monobit.encoding - unicode encodings
 
-(c) 2020 Rob Hagemans
+(c) 2020--2021 Rob Hagemans
 licence: https://opensource.org/licenses/MIT
 """
 
-import unicodedata
 import pkgutil
 import logging
 
@@ -24,23 +23,24 @@ def normalise_encoding(encoding):
     return _ENCODING_ALIASES.get(encoding, encoding)
 
 
-def get_encoding(enc):
-    """Find an encoding by name."""
-    if enc:
-        enc = enc.lower().replace('-', '_')
-        if normalise_encoding(enc) == 'unicode':
+def get_encoder(encoding_name, default=''):
+    """Find an encoding by name and return codec."""
+    encoding_name = encoding_name or default
+    if encoding_name:
+        encoding_name = encoding_name.lower().replace('-', '_')
+        if normalise_encoding(encoding_name) == 'unicode':
             return Unicode
         try:
-            return Codepage(enc)
+            return Codepage(encoding_name)
         except LookupError:
             pass
         try:
-            return Codec(enc)
+            return Codec(encoding_name)
         except LookupError:
             pass
-        logging.warning('Unknown encoding `%s`.', enc)
-    return NoEncoding
-
+    # this will break some formats
+    logging.debug('Unknown encoding `%s`.', encoding_name)
+    return None
 
 
 class Codec:
@@ -53,16 +53,18 @@ class Codec:
         'x'.encode(encoding)
         self._encoding = encoding
 
-    def ord_to_unicode(self, ordinal):
-        """Convert ordinal to unicode, return empty string if missing."""
+    def chr(self, ordinal):
+        """Convert ordinal to character, return empty string if missing."""
+        if ordinal is None:
+            return ''
         byte = bytes([int(ordinal)])
         # ignore: return empty string if not found
-        unicode = byte.decode(self._encoding, errors='ignore')
-        return unicode
+        char = byte.decode(self._encoding, errors='ignore')
+        return char
 
-    def unicode_to_ord(self, unicode):
-        """Convert unicode to ordinal, raise ValueError if missing."""
-        byte = unicode.encode(self._encoding, errors='ignore')
+    def ord(self, char):
+        """Convert character to ordinal, return None if missing."""
+        byte = char.encode(self._encoding, errors='ignore')
         if not byte:
             return None
         return byte[0]
@@ -116,17 +118,17 @@ class Codepage:
                 logging.warning('Could not parse line in codepage file: %s', repr(line))
         return mapping
 
-    def ord_to_unicode(self, ordinal):
-        """Convert ordinal to unicode, return empty string if missing."""
+    def chr(self, ordinal):
+        """Convert ordinal to character, return empty string if missing."""
         try:
             return self._mapping[int(ordinal)]
-        except KeyError as e:
+        except (KeyError, TypeError) as e:
             return ''
 
-    def unicode_to_ord(self, unicode):
-        """Convert unicode to ordinal, return None if missing."""
+    def ord(self, char):
+        """Convert character to ordinal, return None if missing."""
         try:
-            return self._inv_mapping[unicode]
+            return self._inv_mapping[char]
         except KeyError as e:
             return None
 
@@ -140,26 +142,19 @@ class Unicode:
     """Convert between unicode and ordinals."""
 
     @staticmethod
-    def ord_to_unicode(ordinal):
-        """Convert ordinal to unicode."""
+    def chr(ordinal):
+        """Convert ordinal to character."""
+        if ordinal is None:
+            return ''
         return chr(int(ordinal))
 
     @staticmethod
-    def unicode_to_ord(unicode):
-        """Convert unicode to ordinal."""
-        unicode = unicodedata.normalize('NFC', unicode)
-        if len(unicode) != 1:
+    def ord(char):
+        """Convert character to ordinal."""
+        # we used to normalise to NFC here, presumably to reduce multi-codepoint situations
+        # but it leads to inconsistency between char and codepoint for canonically equivalent chars
+        #char = unicodedata.normalize('NFC', char)
+        if len(char) != 1:
             # empty chars or multi-codepoint grapheme clusters are not supported here
             return None
-        return ord(unicode)
-
-
-class NoEncoding:
-
-    @staticmethod
-    def ord_to_unicode(ordinal):
-        return ''
-
-    @staticmethod
-    def unicode_to_ord(key):
-        return None
+        return ord(char)

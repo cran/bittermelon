@@ -1,14 +1,14 @@
 """
 monobit.bmfont - AngelCode BMFont format
 
-(c) 2019 Rob Hagemans
+(c) 2019--2021 Rob Hagemans
 licence: https://opensource.org/licenses/MIT
 """
 
-import os
 import json
 import shlex
 import logging
+from pathlib import Path
 import xml.etree.ElementTree as etree
 
 try:
@@ -16,45 +16,44 @@ try:
 except ImportError:
     Image = None
 
-from .base import ZipContainer, boolean, pair, unique_name
-from .binary import friendlystruct
-from .formats import Loaders, Savers
-from .pack import Pack
-from .font import Font, Coord
-from .glyph import Glyph
-from .winfnt import _CHARSET_MAP
+from ..base import boolean, pair, reverse_dict
+from ..encoding import normalise_encoding
+from .. import streams
+from ..streams import FileFormatError
+from ..base.binary import friendlystruct
+from ..formats import loaders, savers
+from ..font import Font, Coord
+from ..glyph import Glyph
+
+from .winfnt import CHARSET_MAP, CHARSET_REVERSE_MAP
 
 
+##############################################################################
+
+# text/xml/binary format: https://www.angelcode.com/products/bmfont/doc/file_format.html
+# json format: https://github.com/Jam3/load-bmfont/blob/master/json-spec.md
 
 ##############################################################################
 # top-level calls
 
 if Image:
-    @Loaders.register('bmf', name='BMFont', binary=True, multi=True, container=True)
-    def load(container):
+    @loaders.register('bmf', name='BMFont')
+    def load(infile, where, outline:boolean=False):
         """Load fonts from bmfont in container."""
-        descriptions = [
-            _name for _name in container
-            if _name.lower().endswith(('.fnt', '.json', '.xml'))
-        ]
-        fonts = []
-        for desc in descriptions:
-            try:
-                fonts.append(_read_bmfont(container, desc))
-            except ValueError as e:
-                logging.error('Could not extract %s: %s', desc, e)
-        return Pack(fonts)
+        return _read_bmfont(infile, where, outline)
 
-    @Savers.register('bmf', binary=True, multi=True, container=True)
+    @savers.register(loader=load)
     def save(
-            pack, container,
+            fonts, outfile, where,
             image_size:pair=(256, 256),
             image_format:str='png',
             packed:boolean=True,
+            descriptor:str='text',
         ):
         """Save fonts to bmfonts in container."""
-        for font in pack:
-            _create_bmfont(container, font, image_size, packed, image_format)
+        if len(fonts) > 1:
+            raise FileFormatError("Can only save one font to BMFont file.")
+        _create_bmfont(outfile, where, fonts[0], image_size, packed, image_format, descriptor)
 
 
 ##############################################################################
@@ -110,29 +109,35 @@ _INFO_SMOOTH = 1 << 0
 # BMFont charset constants seem to be undocumented, but a list is here:
 # https://github.com/vladimirgamalyan/fontbm/blob/master/src/FontInfo.cpp
 # looks like these are equal to the Windows OEM ones
-# mapping of those is a guess, see _CHARSET_MAP in winfnt.py
-_CHARSET_STR_MAP = {
-    'ANSI': 'windows-1252',
-    'DEFAULT': 'windows-1252', # ?
-    'SYMBOL': 'symbol',
-    'MAC': 'mac-roman',
-    'SHIFTJIS': 'windows-932',
-    'HANGUL': 'windows-949',
-    'JOHAB': 'johab',
-    'GB2312': 'windows-936',
-    'CHINESEBIG5': 'windows-950',
-    'GREEK': 'windows-1253',
-    'TURKISH': 'windows-1254',
-    'VIETNAMESE': 'windows-1258',
-    'HEBREW': 'windows-1255',
-    'ARABIC': 'windows-1256',
-    'BALTIC': 'windows-1257',
-    'RUSSIAN': 'windows-1251',
-    'THAI': 'windows-874',
-    'EASTEUROPE': 'windows-1250',
-    'OEM': 'cp437', # ?
+# mapping of those is a guess, see CHARSET_MAP in winfnt.py
+_CHARSET_NUM_MAP = {
+    'ANSI': 0x00,
+    'DEFAULT': 0x01,
+    'SYMBOL':  0x02,
+    'MAC': 0x4d,
+    'SHIFTJIS': 0x80,
+    'HANGUL': 0x81,
+    'JOHAB': 0x82,
+    'GB2312': 0x86,
+    'CHINESEBIG5': 0x88,
+    'GREEK': 0xa1,
+    'TURKISH': 0xa2,
+    'VIETNAMESE': 0xa3,
+    'HEBREW': 0xb1,
+    'ARABIC': 0xb2,
+    'BALTIC': 0xba,
+    'RUSSIAN': 0xcc,
+    'THAI': 0xde,
+    'EASTEUROPE': 0xee,
+    'OEM': 0xff,
 }
+_CHARSET_NUM_REVERSE_MAP = reverse_dict(_CHARSET_NUM_MAP)
 
+_CHARSET_STR_MAP = {
+    _str: CHARSET_MAP[_num]
+    for _str, _num in _CHARSET_NUM_MAP.items()
+}
+_CHARSET_STR_REVERSE_MAP = reverse_dict(_CHARSET_STR_MAP)
 
 # common struct
 
@@ -229,9 +234,14 @@ def _parse_xml(data):
     root = etree.fromstring(data)
     if root.tag != 'font':
         raise ValueError(
-            'Not a valid BMFont XML file: root should be <font>, not <{}>'.format(root.tag)
+            f'Not a valid BMFont XML file: root should be <font>, not <{root.tag}>'
         )
-    return dict(
+    for tag in ('info', 'common', 'pages', 'chars'):
+        if root.find(tag) is None:
+            raise ValueError(
+                f'Not a valid BMFont XML file: no <{tag}> tag found.'
+            )
+    result = dict(
         bmformat='xml',
         info=root.find('info').attrib,
         common=_COMMON(**_dict_to_ints(root.find('common').attrib)),
@@ -240,24 +250,35 @@ def _parse_xml(data):
             _CHAR(**_dict_to_ints(_elem.attrib))
             for _elem in root.find('chars').iterfind('char')
         ],
-        kernings=[
+        kernings=[]
+    )
+    if root.find('kernings') is not None:
+        result['kernings'] = [
             _KERNING(**_dict_to_ints(_elem.attrib))
             for _elem in root.find('kernings').iterfind('kerning')
         ],
-    )
+    return result
 
 def _parse_json(data):
     """Parse JSON bmfont description."""
     # https://github.com/Jam3/load-bmfont/blob/master/json-spec.md
     tree = json.loads(data)
-    return dict(
+    for tag in ('info', 'common', 'pages', 'chars'):
+        if tag not in tree:
+            raise ValueError(
+                f'Not a valid BMFont JSON file: no <{tag}> key found.'
+            )
+    result = dict(
         bmformat='json',
         info=tree['info'],
         common=_COMMON(**_dict_to_ints(tree['common'])),
         pages=[{'id': _i, 'file': _page} for _i, _page in enumerate(tree['pages'])],
         chars=[_CHAR(**_dict_to_ints(_elem)) for _elem in tree['chars']],
-        kernings=[_KERNING(**_dict_to_ints(_elem)) for _elem in tree['kernings']],
+        kernings=[]
     )
+    if 'kernings' in tree:
+        result['kernings'] = [_KERNING(**_dict_to_ints(_elem)) for _elem in tree['kernings']]
+    return result
 
 def _parse_text_dict(line):
     """Parse space separated key=value pairs."""
@@ -330,7 +351,7 @@ def _parse_binary(data):
         'italic': bininfo.bitField & _INFO_ITALIC,
         'unicode': bininfo.bitField & _INFO_UNICODE,
         'smooth': bininfo.bitField & _INFO_SMOOTH,
-        'charset': _CHARSET_MAP.get(bininfo.charSet, ''),
+        'charset': CHARSET_MAP.get(bininfo.charSet, ''),
         'aa': bininfo.aa,
         'padding': ','.join((
             str(bininfo.paddingUp), str(bininfo.paddingRight),
@@ -350,13 +371,14 @@ def _parse_binary(data):
         props['kernings'] = []
     return props
 
-def _extract(container, name, bmformat, info, common, pages, chars, kernings=()):
-    """Extract characters."""
-    path = os.path.dirname(name)
-    sheets = {
-        int(_page['id']): Image.open(container.open(os.path.join(path, _page['file']), 'rb'))
+def _extract(container, name, bmformat, info, common, pages, chars, kernings=(), outline=False):
+    """Extract glyphs."""
+    path = Path(name).parent
+    image_files = {
+        int(_page['id']): container.open(path / _page['file'], 'r')
         for _page in pages
     }
+    sheets = {_id: Image.open(_file) for _id, _file in image_files.items()}
     imgformats = set(str(_img.format) for _img in sheets.values())
     # ensure we have RGBA channels
     sheets = {_k: _v.convert('RGBA') for _k, _v in sheets.items()}
@@ -369,9 +391,6 @@ def _extract(container, name, bmformat, info, common, pages, chars, kernings=())
         min_after = min((char.xadvance - char.xoffset - char.width) for char in chars)
         min_before = min((char.xoffset) for char in chars)
         max_height = max(char.height + char.yoffset for char in chars)
-        # outline channel
-        if 1 in (common.redChnl, common.greenChnl, common.blueChnl, common.alphaChnl):
-            logging.warning('Outline channel not preserved.')
         # extract channel masked sprites
         sprites = []
         for char in chars:
@@ -383,11 +402,15 @@ def _extract(container, name, bmformat, info, common, pages, chars, kernings=())
                 char.chnl = 15
             # keep only channels that hold this char
             # drop any zeroed/oned channels and the outline channel
+            if outline:
+                channels = (1, 2)
+            else:
+                channels = (0, 2)
             masks = (
-                bool(char.chnl & _CHNL_R) and common.redChnl in (0, 2),
-                bool(char.chnl & _CHNL_G) and common.greenChnl in (0, 2),
-                bool(char.chnl & _CHNL_B) and common.blueChnl in (0, 2),
-                bool(char.chnl & _CHNL_A) and common.alphaChnl in (0, 2),
+                bool(char.chnl & _CHNL_R) and common.redChnl in channels,
+                bool(char.chnl & _CHNL_G) and common.greenChnl in channels,
+                bool(char.chnl & _CHNL_B) and common.blueChnl in channels,
+                bool(char.chnl & _CHNL_A) and common.alphaChnl in channels,
             )
             if char.width and char.height:
                 # require all glyph channels above threshold
@@ -399,6 +422,9 @@ def _extract(container, name, bmformat, info, common, pages, chars, kernings=())
             else:
                 masked = ()
             sprites.append(masked)
+        # close resources
+        for image in sheets.values():
+            image.close()
         # check if font is monochromatic
         colourset = list(set(_tup for _sprite in sprites for _tup in _sprite))
         if len(colourset) == 1:
@@ -411,7 +437,7 @@ def _extract(container, name, bmformat, info, common, pages, chars, kernings=())
                 'Greyscale, colour and antialiased fonts not supported.'
             )
         elif len(colourset) == 2:
-            # use highesr intensity (sum of channels) as foreground
+            # use higher intensity (sum of channels) as foreground
             bg, fg = colourset
             if sum(bg) > sum(fg):
                 bg, fg = fg, bg
@@ -432,8 +458,10 @@ def _extract(container, name, bmformat, info, common, pages, chars, kernings=())
                 )
             else:
                 glyph = Glyph.empty(char.xadvance - min_after, max_height)
-            glyph = glyph.set_annotations(codepoint=len(glyphs))
+            glyph = glyph.set_annotations(codepoint=char.id)
             glyphs.append(glyph)
+    for file in image_files.values():
+        file.close()
     # parse properties
     bmfont_props = {**info}
     # encoding
@@ -441,16 +469,22 @@ def _extract(container, name, bmformat, info, common, pages, chars, kernings=())
         encoding = 'unicode'
         bmfont_props.pop('charset')
     else:
-        # if props are from binary, this has already been converted through _CHARSET_MAP
+        # if props are from binary, this has already been converted through CHARSETMAP
         charset = bmfont_props.pop('charset')
         encoding = _CHARSET_STR_MAP.get(charset.upper(), charset)
     properties = {
         'source-format': 'BMFont ({} descriptor; {} spritesheet)'.format(bmformat, ','.join(imgformats)),
-        'source-name': os.path.basename(name),
+        'source-name': Path(name).name,
         'tracking': min_after,
         'family': bmfont_props.pop('face'),
         # assume size == pixel-size == ascent + descent
         # size can be given as negative for an undocumented reason, maybe if "match char height" set
+        #
+        # https://gamedev.net/forums/topic/657937-strange-34size34-of-generated-bitmapfont/5161902/
+        # > The 'info' block is just a little information on the original truetype font used to generate the bitmap font. This is normally not used while rendering the text.
+        # > A negative size here reflects that the size is matching the cell height, rather than the character height.
+        #
+        # FIXME: so we should not use size for metrics - can use lineHeight and base?
         'ascent': abs(int(bmfont_props.pop('size'))) - (max_height - common.base),
         'descent': max_height - common.base,
         'weight': 'bold' if _to_int(bmfont_props.pop('bold')) else 'regular',
@@ -475,31 +509,30 @@ def _extract(container, name, bmformat, info, common, pages, chars, kernings=())
     })
     return Font(glyphs, properties=properties)
 
-def _read_bmfont(container, name):
+def _read_bmfont(infile, container, outline):
     """Read a bmfont from a container."""
-    with container.open(name, 'rb') as fnt:
-        magic = fnt.read(3)
+    magic = infile.peek(3)
     fontinfo = {}
-    if magic == b'BMF':
-        logging.debug('found binary: %s', name)
-        with container.open(name, 'rb') as fnt:
-            fontinfo = _parse_binary(fnt.read())
+    if magic.startswith(b'BMF'):
+        logging.debug('found binary: %s', infile.name)
+        fontinfo = _parse_binary(infile.read())
     else:
-        with container.open(name, 'r') as fnt:
-            for line in fnt:
-                if line:
-                    break
-            data = line + '\n' + fnt.read()
-            if line.startswith('<'):
-                logging.debug('found xml: %s', name)
-                fontinfo = _parse_xml(data)
-            elif line.startswith('{'):
-                logging.debug('found json: %s', name)
-                fontinfo = _parse_json(data)
-            else:
-                logging.debug('found text: %s', name)
-                fontinfo = _parse_text(data)
-    return _extract(container, name, **fontinfo)
+        fnt = infile.text
+        line = ''
+        for line in fnt:
+            if line:
+                break
+        data = line + '\n' + fnt.read()
+        if line.startswith('<'):
+            logging.debug('found xml: %s', fnt.name)
+            fontinfo = _parse_xml(data)
+        elif line.startswith('{'):
+            logging.debug('found json: %s', fnt.name)
+            fontinfo = _parse_json(data)
+        else:
+            logging.debug('found text: %s', fnt.name)
+            fontinfo = _parse_text(data)
+    return _extract(container, infile.name, outline=outline, **fontinfo)
 
 
 ##############################################################################
@@ -532,12 +565,7 @@ def _create_spritesheets(font, size=(256, 256), packed=False):
         # output glyphs
         x, y = 0, 0
         tree = SpriteNode(x, y, width, height)
-        for glyph in font.glyphs:
-            if len(glyph.char) > 1:
-                logging.warning(
-                    "Can't encode grapheme cluster %s in bmfont file; skipping.", str(label)
-                )
-                continue
+        for number, glyph in enumerate(font.glyphs):
             left, bottom, right, top = glyph.ink_offsets
             cropped = glyph.reduce()
             if cropped.height and cropped.width:
@@ -550,8 +578,12 @@ def _create_spritesheets(font, size=(256, 256), packed=False):
                 data = cropped.as_tuple(fore, back)
                 charimg.putdata(data)
                 img.paste(charimg, (x, y))
+            id = glyph.codepoint
+            if id is None:
+                logging.warning(f"Glyph {ascii(glyph.char)} has no codepoint; skipping.")
+                continue
             chars.append(dict(
-                id=ord(glyph.char),
+                id=id,
                 x=x,
                 y=y,
                 width=cropped.width,
@@ -598,10 +630,19 @@ def _create_textdict(name, dict):
         for _k, _v in dict.items())
     )
 
-def _create_bmfont(container, font, size=(256, 256), packed=False, imageformat='png'):
+def _create_bmfont(
+        outfile, container, font,
+        size=(256, 256), packed=False, imageformat='png', descriptor='text'
+    ):
     """Create a bmfont package."""
     path = font.family
     fontname = font.name.replace(' ', '_')
+    encoding = normalise_encoding(font.encoding)
+    if encoding != 'unicode':
+        # if encoding is unknown, call it OEM
+        charset = _CHARSET_STR_REVERSE_MAP.get(encoding, _CHARSET_STR_REVERSE_MAP[''])
+    else:
+        charset = ''
     # create images
     pages, chars = _create_spritesheets(font, size, packed)
     props = {}
@@ -609,8 +650,8 @@ def _create_bmfont(container, font, size=(256, 256), packed=False, imageformat='
     # save images; create page table
     props['pages'] = []
     for page_id, page in enumerate(pages):
-        name = unique_name(container, f'{path}/{fontname}_{page_id}', imageformat)
-        with container.open(name, 'wb') as imgfile:
+        name = container.unused_name(f'{path}/{fontname}_{page_id}', imageformat)
+        with container.open(name, 'w') as imgfile:
             page.save(imgfile, format=imageformat)
         props['pages'].append({'id': page_id, 'file': name})
     props['info'] = {
@@ -619,8 +660,8 @@ def _create_bmfont(container, font, size=(256, 256), packed=False, imageformat='
         'size': font.pixel_size,
         'bold': font.weight == 'bold',
         'italic': font.slant in ('italic', 'oblique'),
-        'charset': '',
-        'unicode': True,
+        'charset': charset,
+        'unicode': encoding == 'unicode',
         'stretchH': 100,
         'smooth': False,
         'aa': 1,
@@ -651,18 +692,34 @@ def _create_bmfont(container, font, size=(256, 256), packed=False, imageformat='
     else:
         props['kernings'] = []
     # write the .fnt description
-    bmfontname = unique_name(container, f'{path}/{fontname}', 'fnt')
-    with container.open(bmfontname, 'w') as bmf:
-        bmf.write(_create_textdict('info', props['info']))
-        bmf.write(_create_textdict('common', props['common']))
-        for page in props['pages']:
-            bmf.write(_create_textdict('page', page))
-        bmf.write('chars count={}\n'.format(len(chars)))
-        for char in chars:
-            bmf.write(_create_textdict('char', char))
-        bmf.write('kernings count={}\n'.format(len(props['kernings'])))
-        for kern in props['kernings']:
-            bmf.write(_create_textdict('kerning', kern))
+    if descriptor == 'text':
+        _write_fnt_descriptor(outfile, props, chars)
+    elif descriptor == 'json':
+        _write_json(outfile, props, chars)
+    else:
+        raise FileFormatError(f'Writing to descriptor format {format} not supported.')
+
+def _write_fnt_descriptor(outfile, props, chars):
+    """Write the .fnt descriptor file."""
+    bmf = outfile.text
+    bmf.write(_create_textdict('info', props['info']))
+    bmf.write(_create_textdict('common', props['common']))
+    for page in props['pages']:
+        bmf.write(_create_textdict('page', page))
+    bmf.write('chars count={}\n'.format(len(chars)))
+    for char in chars:
+        bmf.write(_create_textdict('char', char))
+    bmf.write('kernings count={}\n'.format(len(props['kernings'])))
+    for kern in props['kernings']:
+        bmf.write(_create_textdict('kerning', kern))
+
+def _write_json(outfile, props, chars):
+    """Write JSON bmfont description."""
+    tree = {**props}
+    # assume the pages list is ordered
+    tree['pages'] = [_elem['file'] for _elem in tree['pages']]
+    tree['chars'] = chars
+    json.dump(tree, outfile.text)
 
 
 class SpriteNode:

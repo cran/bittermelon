@@ -1,7 +1,7 @@
 """
 monobit.cpi - DOS Codepage Information format
 
-(c) 2019 Rob Hagemans
+(c) 2019--2021 Rob Hagemans
 licence: https://opensource.org/licenses/MIT
 """
 
@@ -13,12 +13,12 @@ import os
 import string
 import logging
 
-from .binary import ceildiv, friendlystruct
+from ..base.binary import ceildiv, friendlystruct
+from ..formats import loaders, savers
+from ..font import Font
+from ..glyph import Glyph
+
 from .raw import parse_aligned
-from .formats import Loaders, Savers
-from .pack import Pack
-from .font import Font
-from .glyph import Glyph
 
 
 _ID_MS = b'FONT   '
@@ -100,19 +100,23 @@ _FORMAT_NAME = {
 }
 
 
-@Loaders.register('cpi', name='CPI', binary=True, multi=True)
-def load(instream):
+@loaders.register(
+    'cpi',
+    magic=(b'\xff'+_ID_MS, b'\xff'+_ID_NT, b'\x7f'+_ID_DR),
+    name='CPI'
+)
+def load(instream, where=None):
     """Load fonts from CPI file."""
     data = instream.read()
     fonts = _parse_cpi(data)
-    return Pack(fonts)
+    return fonts
 
-@Loaders.register('cp', name='Codepage', binary=True, multi=True)
-def load_cp(instream):
+@loaders.register('cp', name='Codepage')
+def load_cp(instream, where=None):
     """Load fonts from CP file."""
     data = instream.read()
-    fonts, _ = _parse_cp(data, 0)
-    return Pack(fonts)
+    fonts, _ = _parse_cp(data, 0, standalone=True)
+    return fonts
 
 
 
@@ -158,13 +162,17 @@ def _parse_cpi(data):
         ]
     return fonts
 
-def _parse_cp(data, cpeh_offset, header_id=_ID_MS, drdos_effh=None):
+def _parse_cp(data, cpeh_offset, header_id=_ID_MS, drdos_effh=None, standalone=False):
     """Parse a .CP codepage."""
     cpeh = _CODEPAGE_ENTRY_HEADER.from_bytes(data, cpeh_offset)
     if header_id == _ID_NT:
         # fix relative offsets in FONT.NT
         cpeh.cpih_offset += cpeh_offset
         cpeh.next_cpeh_offset += cpeh_offset
+    if standalone:
+        # on a standalone codepage (kbd .cp file), ignore the offset
+        # CPIH follows immediately after CPEH
+        cpeh.cpih_offset = cpeh_offset + _CODEPAGE_ENTRY_HEADER.size
     cpih = _CODEPAGE_INFO_HEADER.from_bytes(data, cpeh.cpih_offset)
     # offset to the first font header
     fh_offset = cpeh.cpih_offset + _CODEPAGE_INFO_HEADER.size

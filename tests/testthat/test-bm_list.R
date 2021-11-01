@@ -49,6 +49,8 @@ test_that("as_bm_list()", {
     bml <- !as_bm_list("RSTATS", font = font)
     bm <- do.call(cbind, bml)
     verify_output("txt/RSTATS_inverted.txt", print(bm, px = c(" ", "#", "X")))
+
+    expect_equal(as_bm_list("", font = font), bm_list())
 })
 
 test_that("bm_widths() and bm_heights()", {
@@ -152,6 +154,10 @@ test_that("bm_expand()", {
 
     verify_output("txt/capital_r_expand_2vw.txt",
         print(bm_expand(capital_r, width = 2L, height = 2L), px = px_ascii))
+
+    zero <- bm_bitmap(matrix(integer(), nrow = 0, ncol = 0))
+    zero_expand <- bm_expand(zero, width = 2L, height = 2L)
+    expect_equal(dim(zero_expand), c(0, 0))
 })
 
 test_that("bm_compress()", {
@@ -167,9 +173,16 @@ test_that("bm_compress()", {
 
 test_that("as_bm_bitmap.character()", {
     verify_output("txt/abbc.txt",
-        print(as_bm_bitmap("RSTATS", font = font), px = px_ascii))
+        print(as_bm_bitmap("RSTATS", font = font, direction = "lr"), px = px_ascii))
+
+    verify_output("txt/abbc_rltb.txt",
+        print(as_bm_bitmap(c("RSTATS", "IS COOL!"),
+                           font = font, direction = "rlbt"), px = px_ascii))
 
     verify_output("txt/abbc_v.txt",
         print(as_bm_bitmap("RSTATS", font = font, direction = "ttb"), px = px_ascii))
 
+    verify_output("txt/abbc_tbrl.txt",
+        print(as_bm_bitmap(c("RSTATS", "IS COOL!"),
+                           font = font, direction = "tbrl"), px = px_ascii))
 })

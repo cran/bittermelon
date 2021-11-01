@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: align='right' alt='logo' width='120'}}
 
-Provides functions for creating and modifying bitmaps with special emphasis on bitmap fonts and their glyphs.  Provides native read/write support for the 'hex' and 'yaff' bitmap font formats and if 'Python' is installed can also read/write several more bitmap font formats using an embedded version of 'monobit'.
+Provides functions for creating and modifying bitmaps with special emphasis on bitmap fonts and their glyphs. Provides native read/write support for the 'hex' and 'yaff' bitmap font formats and if 'Python' is installed can also read/write several more bitmap font formats using an embedded version of 'monobit'.
 }
 \section{Package options}{
 
@@ -24,6 +24,8 @@ some may prefer \code{px_ascii} which is an ASCII alternative.}
 \code{\link[=format.bm_bitmap]{format.bm_bitmap()}} and \code{\link[=print.bm_bitmap]{print.bm_bitmap()}}.}
 \item{bittermelon.compress}{Set new default \code{compress} argument value for
 \code{\link[=format.bm_bitmap]{format.bm_bitmap()}} and \code{\link[=print.bm_bitmap]{print.bm_bitmap()}}.}
+\item{bittermelon.monobit_path}{Set new default \code{monobit_path} argument value
+for \code{\link[=read_monobit]{read_monobit()}} and \code{\link[=write_monobit]{write_monobit()}}.}
 }
 The following \code{findpython} option may also be of interest:
 \describe{

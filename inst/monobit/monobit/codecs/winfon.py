@@ -2,7 +2,7 @@
 monobit.winfon - windows .FON files
 
 based on Simon Tatham's dewinfont; see MIT-style licence below.
-changes (c) 2019 Rob Hagemans and released under the same licence.
+changes (c) 2019--2021 Rob Hagemans and released under the same licence.
 
 dewinfont is copyright 2001,2017 Simon Tatham. All rights reserved.
 
@@ -30,9 +30,9 @@ SOFTWARE.
 import string
 import logging
 
-from .binary import friendlystruct, ceildiv, align
-from .formats import Loaders, Savers
-from .pack import Pack
+from ..base.binary import friendlystruct, ceildiv, align
+from ..formats import loaders, savers
+from ..streams import FileFormatError
 
 from .winfnt import parse_fnt, create_fnt
 
@@ -235,13 +235,17 @@ _IMAGE_RESOURCE_DATA_ENTRY = friendlystruct(
 ##############################################################################
 # top level functions
 
-@Loaders.register('fon', name='Windows FON', binary=True, multi=True)
-def load(instream):
+@loaders.register(
+    'fon',
+    magic=(b'MZ',),
+    name='Windows font',
+)
+def load(instream, where=None):
     """Load a Windows .FON file."""
     data = instream.read()
     mz_header = _MZ_HEADER.from_bytes(data)
     if mz_header.magic not in (b'MZ', b'ZM'):
-        raise ValueError('MZ signature not found. Not a Windows .FON file')
+        raise FileFormatError('MZ signature not found. Not a Windows .FON file')
     ne_magic = data[mz_header.ne_offset:mz_header.ne_offset+2]
     if ne_magic == b'NE':
         fonts = _parse_ne(data, mz_header.ne_offset)
@@ -249,7 +253,7 @@ def load(instream):
         # PE magic should be padded by \0\0 but I'll believe it at this stage
         fonts = _parse_pe(data, mz_header.ne_offset)
     else:
-        raise ValueError(
+        raise FileFormatError(
             'Executable signature is `{}`, not NE or PE. Not a Windows .FON file'.format(
                 ne_magic.decode('latin-1', 'replace')
             )
@@ -260,13 +264,12 @@ def load(instream):
         )
         for font in fonts
     ]
-    return Pack(fonts)
+    return fonts
 
-@Savers.register('fon', binary=True, multi=True)
-def save(pack, outstream, version:int=2):
+@savers.register(loader=load)
+def save(fonts, outstream, where=None, version:int=2):
     """Write fonts to a Windows .FON file."""
-    outstream.write(_create_fon(pack, version*0x100))
-    return pack
+    outstream.write(_create_fon(fonts, version*0x100))
 
 
 ##############################################################################

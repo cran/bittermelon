@@ -1,16 +1,15 @@
 """
 monobit.mac - MacOS suitcases and resources
 
-(c) 2019 Rob Hagemans
+(c) 2019--2021 Rob Hagemans
 licence: https://opensource.org/licenses/MIT
 """
 
 import logging
 
-from .binary import friendlystruct, bytes_to_bits
-from .formats import Loaders, Savers
-from .pack import Pack
-from .font import Font, Glyph, Coord
+from ..base.binary import friendlystruct, bytes_to_bits
+from ..formats import loaders, savers
+from ..font import Font, Glyph, Coord
 
 
 ##############################################################################
@@ -44,6 +43,7 @@ _APPLEDOUBLE_MAGIC = 0x00051607
 # file info       7       file information: attributes and so on
 # Finder info     9       standard Macintosh Finder information
 _ID_RESOURCE = 2
+
 
 ##############################################################################
 # resource fork/dfont format
@@ -315,20 +315,17 @@ _NON_ROMAN_NAMES = {
 
 ##############################################################################
 
-@Loaders.register('dfont', 'suit',
-    name='MacOS resource',
-    binary=True, multi=True
-)
-def load_dfont(instream):
+@loaders.register('dfont', 'suit', name='MacOS resource')
+def load_dfont(instream, where=None):
     """Load a MacOS suitcase."""
     data = instream.read()
-    return Pack(_parse_resource_fork(data))
+    return _parse_resource_fork(data)
 
-@Loaders.register('apple',
+@loaders.register('apple',
+    magic=(_APPLESINGLE_MAGIC.to_bytes(4, 'big'), _APPLEDOUBLE_MAGIC.to_bytes(4, 'big')),
     name='MacOS resource (AppleSingle/AppleDouble container)',
-    binary=True, multi=True
 )
-def load_apple(instream):
+def load_apple(instream, where=None):
     """Load an AppleSingle or AppleDouble file."""
     data = instream.read()
     return _parse_apple(data)
@@ -357,7 +354,7 @@ def _parse_apple(data):
                 )
                 for font in fonts
             ]
-            return Pack(fonts)
+            return fonts
     raise ValueError('No resource fork found.')
 
 
@@ -545,13 +542,13 @@ def _parse_nfnt(data, offset, properties):
         )
         for _glyph, _width, _offset in zip(glyphs, widths, offsets)
     ]
-    # ordinal labels
+    # codepoint labels
     labelled = [
         _glyph.set_annotations(codepoint=_codepoint)
         for _codepoint, _glyph in zip(range(fontrec.firstChar, fontrec.lastChar+1), glyphs)
     ]
     # last glyph is the "missing" glyph
-    labelled.append(glyphs[-1].set_annotations(labels=['missing']))
+    labelled.append(glyphs[-1].set_annotations(tags=['missing']))
     # drop undefined glyphs & their labels, so long as they're empty
     glyphs = [
         _glyph for _glyph, _width, _offset in zip(labelled, widths, offsets)

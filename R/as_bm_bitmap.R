@@ -33,12 +33,27 @@ as_bm_bitmap.default <- function(x, ...) {
 }
 
 #' @inheritParams as_bm_list
+#' @inheritParams cbind.bm_bitmap
+#' @inheritParams rbind.bm_bitmap
 #' @rdname as_bm_bitmap
-#' @param direction For horizontal binding either "left-to-right" (default) or its aliases "ltr" and "lr"
+#' @param direction For purely horizontal binding either "left-to-right" (default) or its aliases "ltr" and "lr"
 #'                  OR "right-to-left" or its aliases "rtl" and "rl".
-#'                  For vertical binding either "top-to-bottom" (default) or its aliases "ttb" and "tb"
+#'                  For purley vertical binding either "top-to-bottom" (default) or its aliases "ttb" and "tb"
 #'                  OR "bottom-to-top" or its aliases "btt" and "bt".
+#'                  For character vectors of length greater than one: for first horizontal binding within
+#'                  values in the vector
+#'                  and then vertical binding across values in the vector "left-to-right, top-to-bottom" (default)
+#'                  or its aliases "lrtb" and "lr-tb"; "left-to-right, bottom-to-top" or its aliases "lrbt" and "lr-bt";
+#'                  "right-to-left, top-to-bottom" or its aliases "rltb" and "rl-tb"; or
+#'                  "right-to-left, bottom-to-top" or its aliases "rlbt" and "rl-bt".
+#'                  For first vertical binding within values in the vector and then horizontal binding across values
+#'                  "top-to-bottom, left-to-right" or its aliases "tblr" and "tb-lr";
+#'                  "top-to-bottom, right-to-left" or its aliases "tbrl" and "tb-rl";
+#'                  "bottom-to-top, left-to-right" or its aliases "btlr" and "bt-lr"; or
+#'                  "bottom-to-top, right-to-left" or its aliases "btrl" and "bt-rl".
 #'                  The `direction` argument is not case-sensitive.
+#' @param compose Compose graphemes using [bm_compose()].
+#' @param pua_combining Passed to [bm_compose()].
 #' @examples
 #'   font_file <- system.file("fonts/fixed/4x6.yaff.gz", package = "bittermelon")
 #'   font <- read_yaff(font_file)
@@ -48,20 +63,100 @@ as_bm_bitmap.default <- function(x, ...) {
 #'   print(bm, px = px_ascii)
 #' @export
 as_bm_bitmap.character <- function(x, ...,
-                                   direction = "left-to-right",
-                                   font = bm_font()) {
-    bml <- as_bm_list(x, font = font)
+                                   direction = "left-to-right, top-to-bottom",
+                                   font = bm_font(),
+                                   hjust = "left",
+                                   vjust = "top",
+                                   compose = TRUE,
+                                   pua_combining = character(0)) {
 
-    is_ltr <- c(tolower(direction) %in% c("left-to-right", "ltr", "lr"))
-    is_rtl <- c(tolower(direction) %in% c("right-to-left", "rtl", "rl"))
-    is_ttb <- c(tolower(direction) %in% c("top-to-bottom", "ttb", "tb"))
-    is_bbt <- c(tolower(direction) %in% c("bottom-to-top", "bbt", "bt"))
-    stopifnot(is_ltr || is_rtl || is_ttb || is_bbt)
-    if (is_ltr || is_rtl)
-        bm <- bm_call(bml, cbind, direction = direction)
-    else
-        bm <- bm_call(bml, rbind, direction = direction)
+    direction <- tolower(direction)
+    check_direction(direction)
+    direction_type <- get_direction_type(direction)
+    if (direction_type == "h") {
+        bml <- as_bm_list(x, font = font)
+        if (compose) bml <- bm_compose(bml, pua_combining)
+        bm <- bm_call(bml, cbind, direction = direction, vjust = vjust)
+    } else if (direction_type == "v") {
+        bml <- as_bm_list(x, font = font)
+        if (compose) bml <- bm_compose(bml, pua_combining)
+        bm <- bm_call(bml, rbind, direction = direction, hjust = hjust)
+    } else if (direction_type == "hv") {
+        hdirection <- get_h_direction(direction)
+        vdirection <- get_v_direction(direction)
+        l <- lapply(x, as_bm_list, font = font)
+        if (compose) l <- lapply(l, bm_compose, pua_combining)
+        l <- lapply(l, add_space, font = font)
+        l <- lapply(l, function(x) bm_call(x, cbind, direction = hdirection, vjust = vjust))
+        bm <- bm_call(l, rbind, direction = vdirection, hjust = hjust)
+    } else { # vh
+        hdirection <- get_h_direction(direction)
+        vdirection <- get_v_direction(direction)
+        l <- lapply(x, as_bm_list, font = font)
+        if (compose) l <- lapply(l, bm_compose, pua_combining)
+        l <- lapply(l, add_space, font = font)
+        l <- lapply(l, function(x) bm_call(x, rbind, direction = vdirection, hjust = hjust))
+        bm <- bm_call(l, cbind, direction = hdirection, vjust = vjust)
+    }
     bm
+}
+
+check_direction <- function(direction) {
+
+    stopifnot(direction %in% c("left-to-right", "ltr", "lr",
+                               "right-to-left", "rtl", "rl",
+                               "top-to-bottom", "ttb", "tb",
+                               "bottom-to-top", "btt", "bt",
+                               "left-to-right, top-to-bottom", "lrtb", "lr-tb",
+                               "left-to-right, bottom-to-top", "lrbt", "lr-bt",
+                               "right-to-left, top-to-bottom", "rltb", "rl-tb",
+                               "right-to-left, bottom-to-top", "rlbt", "rl-bt",
+                               "top-to-bottom, left-to-right", "tblr", "tb-lr",
+                               "top-to-bottom, right-to-left", "tbrl", "tb-rl",
+                               "bottom-to-top, left-to-right", "btlr", "bt-lr",
+                               "bottom-to-top, right-to-left", "btrl", "bt-rl"))
+}
+
+get_direction_type <- function(direction) {
+    is_h <- direction %in% c("left-to-right", "ltr", "lr", "right-to-left", "rtl", "rl")
+    is_v <- direction %in% c("top-to-bottom", "ttb", "tb", "bottom-to-top", "btt", "bt")
+    is_hv <- direction %in% c("left-to-right, top-to-bottom", "lrtb", "lr-tb",
+                              "left-to-right, bottom-to-top", "lrbt", "lr-bt",
+                              "right-to-left, top-to-bottom", "rltb", "rl-tb",
+                              "right-to-left, bottom-to-top", "rlbt", "rl-bt")
+
+    if (is_h) {
+        "h"
+    } else if (is_v) {
+       "v"
+    } else if (is_hv) {
+        "hv"
+    } else {
+        "vh"
+    }
+}
+
+get_h_direction <- function(direction) {
+    if (grepl("left-to-right|ltr|lr", direction))
+        "left-to-right"
+    else
+        "right-to-left"
+}
+
+get_v_direction <- function(direction) {
+    if (grepl("top-to-bottom|ttb|tb", direction))
+        "top-to-bottom"
+    else
+        "bottom-to-top"
+}
+
+# If a line of text is empty fill it with "space" instead
+add_space <- function(bml, font) {
+    if (length(bml) > 0) {
+        bml
+    } else {
+        font["U+0020"]
+    }
 }
 
 #' @rdname as_bm_bitmap

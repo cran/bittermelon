@@ -1,7 +1,7 @@
 """
 monobit.amiga - Amiga font format
 
-(c) 2019 Rob Hagemans
+(c) 2019--2021 Rob Hagemans
 licence: https://opensource.org/licenses/MIT
 """
 
@@ -9,10 +9,23 @@ import os
 import struct
 import logging
 
-from .binary import friendlystruct, bytes_to_bits
-from .formats import Loaders, Savers
-from .font import Font, Coord
-from .glyph import Glyph
+from ..base.binary import friendlystruct, bytes_to_bits
+from ..formats import loaders, savers
+from ..streams import FileFormatError
+from ..font import Font, Coord
+from ..glyph import Glyph
+
+
+###################################################################################################
+# AmigaOS font format
+#
+# developer docs: Graphics Library and Text
+# https://wiki.amigaos.net/wiki/Graphics_Library_and_Text
+# http://amigadev.elowar.com/read/ADCD_2.1/Libraries_Manual_guide/node03D2.html
+#
+# references on binary file format
+# http://amiga-dev.wikidot.com/file-format:hunk
+# https://archive.org/details/AmigaDOS_Technical_Reference_Manual_1985_Commodore/page/n13/mode/2up (p.14)
 
 
 # amiga header constants
@@ -102,15 +115,15 @@ _AMIGA_HEADER = friendlystruct(
     tf_CharKern='I',
 )
 
-
-@Loaders.register('amiga', name='Amiga Font', binary=True)
-def load(f):
+# this is for .font (info/directory) files: (b'\x0f\x00', b'\x0f\x02')
+@loaders.register('amiga', magic=(b'\0\0\x03\xf3',), name='Amiga Font')
+def load(f, where=None):
     """Read Amiga disk font file."""
     # read & ignore header
     _read_header(f)
     hunk_id = _read_ulong(f)
     if hunk_id != _HUNK_CODE:
-        raise ValueError('Not an Amiga font data file: no code hunk found (id %04x)' % hunk_id)
+        raise FileFormatError('Not an Amiga font data file: no code hunk found (id %04x)' % hunk_id)
     glyphs, props = _read_font_hunk(f)
     return Font(glyphs, properties=props)
 
@@ -145,7 +158,7 @@ def _read_string(f):
 
 def _read_header(f):
     """Read file header."""
-        # read header id
+    # read header id
     if _read_ulong(f) != _HUNK_HEADER:
         raise ValueError('Not an Amiga font data file: incorrect magic constant')
     # null terminated list of strings
@@ -176,14 +189,12 @@ def _read_font_hunk(f):
         amiga_props.tf_Flags & _FPF_PROPORTIONAL,
         amiga_props.tf_Modulo, amiga_props.tf_LoChar, amiga_props.tf_HiChar,
         amiga_props.tf_CharData + loc, amiga_props.tf_CharLoc + loc,
-        amiga_props.tf_CharSpace + loc, amiga_props.tf_CharKern + loc
+        None if not amiga_props.tf_CharSpace else amiga_props.tf_CharSpace + loc,
+        None if not amiga_props.tf_CharKern else amiga_props.tf_CharKern + loc
     )
     props = _parse_amiga_props(amiga_props, offset_x)
-    props['source-name'] = '/'.join(f.name.split(os.sep)[-2:])
-    # the file name tends to be the name as given in the .font anyway
-    if 'name' not in props:
-        props['name'] = props['source-name']
-    props['family'] = props['name'].split('/')[0].split(' ')[0]
+    if 'name' in props:
+        props['family'] = props['name'].split('/')[0].split(' ')[0]
     return glyphs, props
 
 def _parse_amiga_props(amiga_props, offset_x):
@@ -291,5 +302,5 @@ def _read_strike(
         for _i, (_char, _width, _kern) in enumerate(zip(font, spacing, kerning))
     ]
     # default glyph has no codepoint
-    glyphs[-1] = glyphs[-1].set_annotations(codepoint=None, labels=('default',))
+    glyphs[-1] = glyphs[-1].set_annotations(codepoint=None, tags=('default',))
     return glyphs, offset_x

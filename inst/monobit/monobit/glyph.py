@@ -1,22 +1,26 @@
 """
 monobit.glyph - representation of single glyph
 
-(c) 2019 Rob Hagemans
+(c) 2019--2021 Rob Hagemans
 licence: https://opensource.org/licenses/MIT
 """
 
 import binascii
+import logging
 
 from .base import scriptable
-from .binary import ceildiv, bytes_to_bits
-from .text import to_text
+from .base.binary import ceildiv, bytes_to_bits
+from .base.text import to_text
+from .label import UnicodeLabel, CodepointLabel
+
 
 NOT_SET = object()
+
 
 class Glyph:
     """Single glyph."""
 
-    def __init__(self, pixels=((),), codepoint=None, char='', labels=(), comments=()):
+    def __init__(self, pixels=((),), codepoint=None, char='', tags=(), comments=()):
         """Create glyph from tuple of tuples."""
         # glyph data
         self._rows = tuple(tuple(bool(_bit) for _bit in _row) for _row in pixels)
@@ -28,11 +32,11 @@ class Glyph:
         self._comments = tuple(comments)
         self._codepoint = codepoint
         self._char = char
-        self._labels = tuple(labels)
+        self._tags = tuple(tags)
 
     @property
-    def labels(self):
-        return self._labels
+    def tags(self):
+        return self._tags
 
     @property
     def char(self):
@@ -52,16 +56,34 @@ class Glyph:
             to_text(self.as_matrix(fore='@', back='.'), line_break="'\n  '")
         )
 
-    def add_annotations(self, *, labels=(), comments=()):
-        """Return a copy of the glyph with added labels or comments."""
+    def add_annotations(self, *, tags=(), comments=()):
+        """Return a copy of the glyph with added tags or comments."""
         return self.modify(
-            labels=self._labels + tuple(labels),
+            tags=self._tags + tuple(tags),
             comments=self._comments + tuple(comments)
         )
 
-    def set_annotations(self, *, labels=NOT_SET, char=NOT_SET, codepoint=NOT_SET, comments=NOT_SET):
+    def set_annotations(self, *, tags=NOT_SET, char=NOT_SET, codepoint=NOT_SET, comments=NOT_SET):
         """Return a copy of the glyph with different annotations."""
-        return self.modify(labels=labels, char=char, codepoint=codepoint, comments=comments)
+        return self.modify(tags=tags, char=char, codepoint=codepoint, comments=comments)
+
+    def set_encoding_annotations(self, encoder):
+        """Set annotations using provided encoder object."""
+        # use codepage to find char if not set
+        if not self.char:
+            return self.set_annotations(char=encoder.chr(self.codepoint))
+        # use codepage to find codepoint if not set
+        if self.codepoint is None:
+            return self.set_annotations(codepoint=encoder.ord(self.char))
+        # both are set but not onsistent with codepage
+        enc_char = encoder.chr(self.codepoint)
+        if self.char != enc_char:
+            logging.warning(
+                f'Inconsistent encoding at {CodepointLabel(self.codepoint)}: '
+                f'mapped to {UnicodeLabel.from_char(self.char)} '
+                f'instead of {UnicodeLabel.from_char(enc_char)} per stated encoding.'
+            )
+        return self
 
     @scriptable
     def drop_comments(self):
@@ -69,13 +91,13 @@ class Glyph:
         return self.modify(comments=())
 
     def modify(
-            self, pixels=NOT_SET, *, labels=NOT_SET, char=NOT_SET, codepoint=NOT_SET, comments=NOT_SET
+            self, pixels=NOT_SET, *, tags=NOT_SET, char=NOT_SET, codepoint=NOT_SET, comments=NOT_SET
         ):
         """Return a copy of the glyph with changes."""
         if pixels is NOT_SET:
             pixels = self._rows
-        if labels is NOT_SET:
-            labels = self._labels
+        if tags is NOT_SET:
+            tags = self._tags
         if codepoint is NOT_SET:
             codepoint = self._codepoint
         if char is NOT_SET:
@@ -86,14 +108,9 @@ class Glyph:
             tuple(pixels),
             codepoint=codepoint,
             char=char,
-            labels=tuple(labels),
+            tags=tuple(tags),
             comments=tuple(comments)
         )
-
-    @property
-    def comments(self):
-        """Extract comments."""
-        return self._comments
 
     @classmethod
     def empty(cls, width=0, height=0):
@@ -198,10 +215,12 @@ class Glyph:
         if not self._rows:
             return 0
         inked = [True in _row for _row in self._rows]
-        return len(inked) - inked.index(True) - list(reversed(inked)).index(True)
+        if True in inked:
+            return len(inked) - inked.index(True) - list(reversed(inked)).index(True)
+        return 0
 
     @property
-    def bounding_box(self):
+    def ink_bounds(self):
         """Dimensions of tightest box to fit glyph."""
         return self.ink_width, self.ink_height
 

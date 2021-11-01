@@ -1,22 +1,27 @@
 """
 monobit.c - fonts embedded in C source files
 
-(c) 2019 Rob Hagemans
+(c) 2019--2021 Rob Hagemans
 licence: https://opensource.org/licenses/MIT
 """
 
 import string
 
-from .binary import ceildiv
-from .formats import Loaders, Savers
-from .font import Font
-from .glyph import Glyph
+from ..base.binary import ceildiv
+from ..formats import loaders, savers
+from ..font import Font
+from ..glyph import Glyph
+from ..streams import FileFormatError
+from ..base import pair
 
 
-@Loaders.register('c', 'cc', 'cpp', 'h', name='C-source')
-def load(infile, identifier:str, width:int, height:int):
+###################################################################################################
+
+@loaders.register('c', 'cc', 'cpp', 'h', name='C-source')
+def load(infile, where, identifier:str, cell:pair):
     """Load font from a .c file."""
-    payload = _get_payload(infile, identifier)
+    width, height = cell
+    payload = _get_payload(infile.text, identifier)
     # c bytes are python bytes, except 0777-style octal (which we therefore don't support correctly)
     bytelist = [_int_from_c(_s) for _s in payload.split(',') if _s]
     # split into chunks
@@ -78,3 +83,34 @@ def _get_payload(instream, identifier):
         if line:
             payload.append(line)
     return ''.join(payload)
+
+
+###################################################################################################
+
+@savers.register('c', loader=load)
+def save(fonts, outstream, where=None):
+    """Save font to c source as byte-aligned binary (DOS font)."""
+    if len(fonts) > 1:
+        raise FileFormatError('Can only save one font to BDF file.')
+    font = fonts[0]
+    outstream = outstream.text
+    # check if font is fixed-width and fixed-height
+    if font.spacing != 'character-cell':
+        raise FileFormatError(
+            'This format only supports character-cell fonts.'
+        )
+    # convert name to c identifier
+    ascii_name = font.name.encode('ascii', 'ignore').decode('ascii')
+    ascii_name = ''.join(_c if _c.isalnum() else '_' for _c in ascii_name)
+    identifier = 'char font_' + ascii_name
+    width, height = font.bounding_box
+    bytesize = ceildiv(width, 8) * height
+    outstream.write(f'{identifier}[{len(font.glyphs) * bytesize}]')
+    outstream.write(' = {\n')
+    for glyph in font.glyphs:
+        outstream.write('  ')
+        for byte in glyph.as_bytes():
+            outstream.write(f'0x{byte:02x}, ')
+        outstream.write('\n')
+    outstream.write('}\n')
+    return font

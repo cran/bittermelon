@@ -1,3 +1,43 @@
+bittermelon 0.2.1
+=================
+
+New features
+------------
+
+* New function `bm_compose()` simplifies `bm_list()` object
+  by applying combining marks to preceding glpyhs (composing new graphemes) (#42).
+* `as_bm_bitmap.character()` has new arguments `compose` and `pua_combining`
+  to compose graphemes using combining characters.
+* `as_bm_bitmap.character()` direction argument now supports combining
+  in combinations of horizontal/vertical directions such as
+  `left-to-right, top-to-bottom` (#47).
+* `is_combining_character()` has new argument `pua_combining`
+  which is character vector of additional Unicode code points
+  to be considered "combining" characters (such as those
+  in the Private Use Area of a font).  Defaults to `character(0)`.
+* We now include the 5x8 Fixed font (in addition to the 4x6 and 6x13 Fixed fonts already included in earlier version).
+* `read_monobit()` and `write_monobit()` take new argument `monobit_path` indicating
+  the directory path containing `monobit` to use.  
+  Default will be to look in `file.path(rappdirs::user_config_dir("bittermelon"), "monobit")`,
+  `file.path(rappdirs::site_config_dir("bittermelon"), "monobit")`, and
+  `system.file("monobit", package = "bittermelon")` (in that order).
+  New package option `bittermelon.monobit_path` can be used to set a new default. (#48)
+* New function `update_monobit()` which downloads the most up to date (upstream) version of 
+  [monobit](https://github.com/robhagemans/monobit).
+  Although we continue to embed an older, more compact version of `monobit` in this package
+  the newest versions of `monobit` are too large to embed within this package and
+  must be downloaded separately.
+
+Bug fixes and minor improvements
+--------------------------------
+
+* Updates the embedded version of [monobit](https://github.com/robhagemans/monobit).
+  In particular `monobit` should now better handle Amiga, [AngelCode BMFont](http://www.angelcode.com/products/bmfont/), X11/Adobe BDF, and C/C++ source code bitmap fonts and be able to natively read/write 
+  bzip2, gzip, or lzma compressed fonts.
+* Fixes bug in `is_combining_character()`.  
+  Now "combining enclosing" characters are correctly classified as combining characters.
+* Fixes bug in `bm_expand()` for bitmaps with zero columns/rows.
+
 bittermelon 0.1.3
 =================
 

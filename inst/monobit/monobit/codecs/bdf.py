@@ -1,17 +1,23 @@
 """
 monobit.bdf - Adobe Glyph Bitmap Distribution Format
 
-(c) 2019 Rob Hagemans
+(c) 2019--2021 Rob Hagemans
 licence: https://opensource.org/licenses/MIT
 """
 
 import logging
 
-from .formats import Loaders, Savers
-from .font import Font, Coord
-from .glyph import Glyph
-from .encoding import get_encoding
+from ..formats import loaders, savers
+from ..streams import FileFormatError
+from ..font import Font, Coord
+from ..glyph import Glyph
+from ..encoding import get_encoder
+from ..label import UnicodeLabel
 
+
+# BDF specification: https://adobe-type-tools.github.io/font-tech-notes/pdfs/5005.BDF_Spec.pdf
+# XLFD conventions: https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/XLFD/xlfd.html
+# charset and property registry: https://github.com/freedesktop/xorg-docs/blob/master/registry
 
 # x11 encodings e.g.
 # ISO10646-1 = unicode
@@ -130,9 +136,10 @@ _XLFD_UNPARSED = {
 ##############################################################################
 # top-level calls
 
-@Loaders.register('bdf', name='BDF')
-def load(instream):
+@loaders.register('bdf', magic=(b'STARTFONT ',), name='BDF')
+def load(instream, where=None):
     """Load font from a .bdf file."""
+    instream = instream.text
     nchars, comments, bdf_props, x_props = _read_bdf_global(instream)
     glyphs, glyph_props = _read_bdf_characters(instream)
     # check number of characters, but don't break if no match
@@ -142,11 +149,12 @@ def load(instream):
     return Font(glyphs, comments=comments, properties=properties)
 
 
-@Savers.register('bdf', multi=False)
-def save(font, outstream):
+@savers.register(loader=load)
+def save(fonts, outstream, where=None):
     """Write fonts to a .bdf file."""
-    _save_bdf(font, outstream)
-    return font
+    if len(fonts) > 1:
+        raise FileFormatError('Can only save one font to BDF file.')
+    _save_bdf(fonts[0], outstream.text)
 
 
 ##############################################################################
@@ -192,7 +200,7 @@ def _read_bdf_characters(instream):
         try:
             int(label)
         except ValueError:
-            glyph = glyph.set_annotations(labels=[label])
+            glyph = glyph.set_annotations(tags=[label])
         # ENCODING must be single integer or -1 followed by integer
         encvalue = int(meta['ENCODING'].split(' ')[-1])
         # no encoding number found
@@ -413,12 +421,12 @@ def _parse_xlfd_properties(x_props, xlfd_name):
         properties['encoding'] = f'{registry}-{encoding}'
     elif registry:
         properties['encoding'] = registry
-    else:
+    elif encoding != '0':
         properties['encoding'] = encoding
     if 'DEFAULT_CHAR' in x_props:
         default_ord = x_props.pop('DEFAULT_CHAR', None)
-        encoder = get_encoding(properties['encoding'])
-        properties['default-char'] = encoder.ord_to_unicode(default_ord)
+        encoder = get_encoder(properties['encoding'])
+        properties['default-char'] = UnicodeLabel.from_char(encoder.chr(default_ord))
     properties = {_k: _v for _k, _v in properties.items() if _v is not None and _v != ''}
     # invalid xlfd name: keep but with changed property name
     if not xlfd_name_props:
@@ -479,8 +487,8 @@ def _create_xlfd_properties(font):
         'AVERAGE_WIDTH': str(round(float(font.average_advance) * 10)).replace('-', '~'),
     }
     # encoding dependent values
-    encoder = get_encoding(font.encoding)
-    xlfd_props['DEFAULT_CHAR'] = encoder.unicode_to_ord(font.default_char)
+    encoder = get_encoder(font.encoding, 'unicode')
+    xlfd_props['DEFAULT_CHAR'] = encoder.ord(font.default_char.to_char())
     if font.encoding == 'unicode':
         xlfd_props['CHARSET_REGISTRY'] = '"ISO10646"'
         xlfd_props['CHARSET_ENCODING'] = '"1"'
@@ -517,42 +525,33 @@ def _save_bdf(font, outstream):
         )
     ]
     # labels
-    is_unicode = font.encoding == 'unicode'
     # get glyphs for encoding values
     encoded_glyphs = []
     for glyph in font.glyphs:
-        # keep the first text label as the glyph name
-        if not glyph.labels:
-            name = ''
+        try:
+            encoding = int(glyph.codepoint)
+        except TypeError:
+            # multi-codepoint grapheme cluster or not set
+            # -1 means no encoding value in bdf
+            encoding = -1
+        # char must have a name in bdf
+        # keep the first tag as the glyph name if available
+        if glyph.tags:
+            name = glyph.tags[0]
         else:
-            name = glyph.labels[0]
-        has_encoding_value = False
-        if is_unicode:
-            try:
-                encoding = ord(glyph.char)
-            except ValueError:
-                # multi-codepoint grapheme cluster or not set
-                pass
+            if encoding != -1 and font.encoding != 'unicode':
+                # use encoding value if available
+                name = f'char{encoding:02X}'
+            elif glyph.char:
+                # work with unicode sequence if character available
+                uni_ords = [ord(_c) for _c in glyph.char]
+                name = 'uni' + '-'.join(f'{_ord:04X}' for _ord in uni_ords)
             else:
-                if not name:
-                    name = f'uni{encoding:04X}'
-                encoded_glyphs.append((encoding, name, glyph))
-                has_encoding_value = True
-        else:
-            try:
-                encoding = int(glyph.codepoint)
-            except TypeError:
-                # not set
-                pass
-            else:
-                if not name:
-                    name = f'char{encoding:02X}'
-                encoded_glyphs.append((encoding, name, glyph))
-                has_encoding_value = True
-        if not has_encoding_value:
-            # glyph has no encoding value
-            # must have a name - else it has no labels referring to it!
-            encoded_glyphs.append((-1, name, glyph))
+                logging.warning(
+                    f'Multi-codepoint glyph {glyph.codepoint}'
+                    "can't be stored as no name or character available."
+                )
+        encoded_glyphs.append((encoding, name, glyph))
     glyphs = []
     for encoding, name, glyph in encoded_glyphs:
         # "The SWIDTH y value should always be zero for a standard X font."
@@ -565,7 +564,7 @@ def _save_bdf(font, outstream):
         dwidth_x = font.offset.x + glyph.width + font.tracking
         swidth_x = int(round(dwidth_x / (font.point_size / 1000) / (font.dpi.y / 72)))
         offset_x, offset_y = font.offset.x, font.offset.y
-        # minimize glyphs to bbx before storing, except "cell" fonts
+        # minimize glyphs to ink-bounds (BBX) before storing, except "cell" fonts
         if font.spacing not in ('character-cell', 'multi-cell'):
             offset_x, offset_y = offset_x + glyph.ink_offsets[0], offset_y + glyph.ink_offsets[1]
             glyph = glyph.reduce()
