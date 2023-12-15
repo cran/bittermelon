@@ -1,8 +1,8 @@
-ebf171eee66e20550f4ca9e9d5628848 *DESCRIPTION
+f9641e88dd538986e7a8be184404cacc *DESCRIPTION
 c2da7b2f294c556995a8526f9cebf7a9 *LICENSE
 af076567228a42c43c6b58cc21cc65bd *LICENSE.note
 12f439b00b9639ffcb920c59fb19949c *NAMESPACE
-8181f1e189a5d43bca9f5f9b2fc267ee *NEWS.md
+e22e6867a6541ec4fc598ac6986933f5 *NEWS.md
 8d017bf2bbf3184f5cf69eb52e0134d2 *R/Extract.bm_bitmap.R
 38baed2ba46d496bdb364778dce94c4b *R/Ops.bm_object.R
 f1fe6c29d9f518073a28593ae01e7de8 *R/Summary.bm_list.R
@@ -40,10 +40,10 @@ e6fc6e9fceeddccf55bdd64ea7277193 *R/monobit.R
 3325f341e3260beb46c0bd4c745c9c57 *R/plot.bm_bitmap.R
 f1287c01e290f882b19aaa9276748b84 *R/print.bm_bitmap.R
 00f599dbbe0c1c034a7af3b7869d5cd4 *R/ucp.R
-0029481fd8c86c6a9f531e9019e8c70f *R/utils-unicode.R
+76da56cca3310b402859fb615618ea57 *R/utils-unicode.R
 0df5c93df357ecd6d860608403778d30 *R/utils.R
 d8b0094c1c412cc2fbaef84773f6d7ff *R/yaff.R
-d184b0d2490319217968844f772803a3 *README.md
+d47b403e87a09a2488d1ac454ed1b2a1 *README.md
 53348fbea64dd3c7d0713c2f55f68faa *inst/fonts/fixed/4x6.yaff.gz
 6495772107e70fd6e0c53d85bdb65660 *inst/fonts/fixed/5x8.yaff.gz
 1c0a03d8b917153ec63547d2e1e2c03a *inst/fonts/fixed/6x13.yaff.gz
