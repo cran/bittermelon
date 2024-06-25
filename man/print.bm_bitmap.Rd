@@ -6,6 +6,7 @@
 \alias{format.bm_bitmap}
 \alias{px_unicode}
 \alias{px_ascii}
+\alias{px_auto}
 \title{Print bitmap objects}
 \format{
 An object of class \code{character} of length 20.
@@ -13,19 +14,31 @@ An object of class \code{character} of length 20.
 An object of class \code{character} of length 20.
 }
 \usage{
-\method{print}{bm_bitmap}(x, ..., px = getOption("bittermelon.px", px_unicode),
-                                 fg = getOption("bittermelon.fg", FALSE),
-                                 bg = getOption("bittermelon.bg", FALSE),
-                                 compress = getOption("bittermelon.compress", "none"))
+\method{print}{bm_bitmap}(
+  x,
+  ...,
+  px = getOption("bittermelon.px", px_auto()),
+  fg = getOption("bittermelon.fg", FALSE),
+  bg = getOption("bittermelon.bg", FALSE),
+  compress = getOption("bittermelon.compress", "none"),
+  downscale = getOption("bittermelon.downscale", FALSE)
+)
 
-\method{format}{bm_bitmap}(x, ..., px = getOption("bittermelon.px", px_unicode),
-                                 fg = getOption("bittermelon.fg", FALSE),
-                                 bg = getOption("bittermelon.bg", FALSE),
-                                 compress = getOption("bittermelon.compress", "none"))
+\method{format}{bm_bitmap}(
+  x,
+  ...,
+  px = getOption("bittermelon.px", px_auto()),
+  fg = getOption("bittermelon.fg", FALSE),
+  bg = getOption("bittermelon.bg", FALSE),
+  compress = getOption("bittermelon.compress", "none"),
+  downscale = getOption("bittermelon.downscale", FALSE)
+)
 
 px_unicode
 
 px_ascii
+
+px_auto(unicode = px_unicode, ascii = px_ascii)
 }
 \arguments{
 \item{x}{A \code{bm_bitmap()} object}
@@ -37,21 +50,26 @@ The first character for integer \code{0L},
 the second character for integer \code{1L}, and so on.
 Will be recycled.}
 
-\item{fg}{R color strings of foreground colors to use.
-Requires suggested package \code{crayon}.
+\item{fg}{R color strings of foreground colors to use and/or cli ANSI style functions of class \code{cli_ansi_style}.
 \code{FALSE} (default) for no foreground colors.
-Will be recycled.}
+Will be recycled and passed to \code{\link[cli:make_ansi_style]{cli::make_ansi_style()}}.}
 
-\item{bg}{R color strings of background colors to use.
-Requires suggested package \code{crayon}.
+\item{bg}{R color strings of background colors to use and/or cli ANSI style functions of class \code{cli_ansi_style}.
 \code{FALSE} (default) for no background colors.
-Will be recycled.}
+Will be recycled and passed to \code{\link[cli:make_ansi_style]{cli::make_ansi_style()}} with \code{bg = TRUE}.}
 
-\item{compress}{If \code{none} (default) don't compress first with \code{\link[=bm_compress]{bm_compress()}}.
+\item{compress}{If "none" (default) or "n" don't compress first with \code{\link[=bm_compress]{bm_compress()}}.
 Otherwise compress first with \code{\link[=bm_compress]{bm_compress()}} passing
 the value of \code{compress} as its \code{direction} argument
 (i.e. either "vertical" or "v", "horizontal" or "h",
 OR "both" or "b").}
+
+\item{downscale}{If \code{TRUE} and the printed bitmap will be wider than \code{getOption("width")}
+then shrink the image to fit \code{getOption("width")} using \code{\link[=bm_downscale]{bm_downscale()}}.}
+
+\item{unicode}{Character vector to use if \code{\link[cli:is_utf8_output]{cli::is_utf8_output()}} is \code{TRUE}.}
+
+\item{ascii}{Character vector to use if \code{\link[cli:is_utf8_output]{cli::is_utf8_output()}} is \code{FALSE}.}
 }
 \value{
 A character vector of the string representation (\code{print.bm_bitmap()} does this invisibly).
@@ -63,21 +81,57 @@ It is a wrapper around \code{format.bm_bitmap()} which converts bitmap objects
 to a character vector.
 \code{px_unicode} and \code{px_ascii} are builtin character vectors intended for use with the \code{px}
 argument (the former contains Unicode \dQuote{Block Elements} while the latter is purely ASCII).
+\code{px_auto()} chooses which character vector to use based on whether \code{\link[cli:is_utf8_output]{cli::is_utf8_output()}} is \code{TRUE} or not.
 }
+\section{Fonts and terminal settings}{
+Printing bitmaps/pixmaps may or may not look great
+in your terminal depending on a variety of factors:
+\itemize{
+\item The terminal should support the Unicode - UTF-8 encoding.
+We use \code{\link[cli:is_utf8_output]{cli::is_utf8_output()}} to guess Unicode support
+which in turn looks at \code{getOption("cli.unicode")} and \code{\link[=l10n_info]{l10n_info()}}.
+\item The terminal should support ANSI sequences and if it does
+it should support many colors.
+\itemize{
+\item We use \code{\link[cli:num_ansi_colors]{cli::num_ansi_colors()}} to detect number of colors supported.
+\code{num_ansi_colors()} detection algorithm is complicated but it first looks at
+\code{getOption("cli.num_colors")}.
+}
+\itemize{
+\item If \code{cli::num_ansi_colors()} equals 16777216 then your terminal
+supports 24-bit ANSI colors.
+}
+\itemize{
+\item If using the Windows Command Prompt window you may need to enable
+ANSI sequences support by doing \verb{REG ADD HKCU\\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1}
+from the command-line or running \code{regedit} (Registry Editor) and go to
+\verb{Computer\\HKEY_CURRENT_USER\\Console} and set \code{VirtualTerminalLevel} to \code{1}.
+}
+\item The font used by the terminal should be a monoscale font that supports the
+\href{https://en.wikipedia.org/wiki/Block_Elements}{Block Elements} Unicode block.
+\item The terminal text settings should have a cell spacing around 1.00 times width and 1.00 times height.
+For terminals configured by CSS styles this means a \code{line-height} of around \code{1.0}.
+}
+}
+
 \examples{
-  font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
-  font <- read_hex(font_file)
-  bm_R <- font[[str2ucp("R")]]
-  print(bm_R, px = c(" ", "#"))
+font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+font <- read_hex(font_file)
+bm_R <- font[[str2ucp("R")]]
+print(bm_R)
 
-  bm_8 <- font[[str2ucp("8")]]
-  bm_8_with_border <- bm_extend(bm_extend(bm_8, left = 1L),
-                                sides = 1L, value = 2L)
-  print(bm_8_with_border, px = c(".", "@", "X"))
+if (cli::is_utf8_output())
+  print(bm_R, px = px_unicode, compress = "vertical")
 
-  if (require("crayon") && crayon::has_color()) {
-    print(bm_8_with_border, px = " ", bg = c("white", "blue", "red"))
-  }
+bm_8 <- font[[str2ucp("8")]]
+bm_8_with_border <- bm_extend(bm_extend(bm_8, left = 1L),
+                              sides = 1L, value = 2L)
+print(bm_8_with_border, px = c(".", "@", "X"))
+
+if (cli::num_ansi_colors() >= 16L) {
+  print(bm_8_with_border, px = " ",
+        bg = c(cli::bg_br_white, cli::bg_blue, cli::bg_red))
+}
 }
 \seealso{
 \code{\link[=bm_bitmap]{bm_bitmap()}}

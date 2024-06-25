@@ -1,6 +1,7 @@
-#' Compress bitmaps using a "block elements" scheme
+#' Compress bitmaps by a factor of two
 #'
-#' Compress bitmaps by a factor of two by re-mapping to a \dQuote{block elements} scheme.
+#' Compresses [bm_bitmap()] objects by a factor of two by re-mapping to a \dQuote{block elements} scheme.
+#' For pixmap objects like [bm_pixmap()] we simply shrink the pixmap by a factor of two using [bm_distort()].
 #'
 #' Depending on `direction` we shrink the bitmaps height and/or width by
 #' a factor of two and re-encode pairs/quartets of pixels to a \dQuote{block elements} scheme.
@@ -13,44 +14,108 @@
 #' matching \dQuote{Block Elements} glyphs while `px_ascii` gives the closest ASCII approximation.
 #' Hence `print.bm_bitmap()` should produce reasonable results for compressed bitmaps if
 #' either of them are used as the `px` argument.
+#' @inheritParams bm_clamp
+#' @inheritParams bm_distort
 #' @inheritParams bm_flip
 #' @examples
-#'   font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
-#'   font <- read_hex(font_file)
-#'   r <- font[[str2ucp("R")]]
-#'   print(r, px = px_ascii)
-#'   print(bm_compress(r, "vertical"), px = px_ascii)
-#'   print(bm_compress(r, "horizontal"), px = px_ascii)
-#'   print(bm_compress(r, "both"), px = px_ascii)
+#' font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+#' font <- read_hex(font_file)
+#' r <- font[[str2ucp("R")]]
+#' print(r)
+#' print(bm_compress(r, "vertical"))
+#' print(bm_compress(r, "horizontal"))
+#' print(bm_compress(r, "both"))
+#'
+#' img <- png::readPNG(system.file("img", "Rlogo.png", package="png"))
+#' logo <- as_bm_pixmap(img)
+#' if (cli::is_utf8_output() && 
+#'     cli::num_ansi_colors() > 256L &&
+#'     requireNamespace("magick", quietly = TRUE)) {
+#'   logo_c <- bm_compress(pm, "both", filter = NULL)
+#'   print(logo_c, compress = "v")
+#' }
 #' @inherit bm_clamp return
 #' @seealso See <https://en.wikipedia.org/wiki/Block_Elements> for more info on the Unicode Block Elements block.
 #' @export
-bm_compress <- function(bm_object, direction = "vertical") {
+bm_compress <- function(x, direction = "vertical", ...) {
+    UseMethod("bm_compress")
+}
+
+#' @rdname bm_compress
+#' @export
+bm_compress.bm_bitmap <- function(x, direction = "vertical", ...) {
     direction <- match.arg(tolower(direction),
                            c("vertical", "v", "horizontal", "h", "both", "b"))
     direction <- substr(direction, 1L, 1L)
-    modify_bm_bitmaps(bm_object, bm_compress_bitmap, direction = direction)
+    bm_compress_bitmap(x, direction = direction)
 }
 
-bm_compress_bitmap <- function(bitmap, direction = "v") {
-    if (ncol(bitmap) %% 2L == 1L)
-        bitmap <- bm_extend(bitmap, right = 1L)
-    if (nrow(bitmap) %% 2L == 1L)
-        bitmap <- bm_extend(bitmap, bottom = 1L)
+#' @rdname bm_compress
+#' @export
+bm_compress.bm_pixmap <- function(x, direction = "vertical", ..., filter = "Point") {
+    bm_compress_pixmap(x, direction, filter)
+}
+
+#' @rdname bm_compress
+#' @export
+`bm_compress.magick-image` <- function(x, direction = "vertical", ..., filter = "Point") {
+    bm_compress_pixmap(x, direction, filter)
+}
+
+#' @rdname bm_compress
+#' @export
+bm_compress.nativeRaster <- function(x, direction = "vertical", ..., filter = "Point") {
+    bm_compress_pixmap(x, direction, filter)
+}
+
+#' @rdname bm_compress
+#' @export
+bm_compress.raster <- function(x, direction = "vertical", ..., filter = "Point") {
+    bm_compress_pixmap(x, direction, filter)
+}
+
+bm_compress_pixmap <- function(x, direction, filter) {
+    direction <- match.arg(tolower(direction),
+                           c("vertical", "v", "horizontal", "h", "both", "b"))
+    direction <- substr(direction, 1L, 1L)
     switch(direction,
-           b = bm_compress_both(bitmap),
-           h = bm_compress_horizontal(bitmap),
-           v = bm_compress_vertical(bitmap))
+           v = bm_distort(x, width = bm_widths(x),
+                          height = bm_heights(x) / 2L,
+                          filter = filter),
+           h = bm_distort(x, width = bm_widths(x) / 2L,
+                          height = bm_heights(x),
+                          filter = filter),
+           b = bm_distort(x, width = bm_widths(x) / 2L, 
+                          height = bm_heights(x) / 2L,
+                          filter = filter)
+           )
 }
 
-bm_compress_both <- function(bitmap) {
-    m <- matrix(0L, nrow = nrow(bitmap) / 2L, ncol = ncol(bitmap) / 2L)
+#' @rdname bm_compress
+#' @export
+bm_compress.bm_list <- function(x, ...) {
+    bm_lapply(x, bm_compress, ...)
+}
+
+bm_compress_bitmap <- function(x, direction = "v") {
+    if (ncol(x) %% 2L == 1L)
+        x <- bm_extend(x, right = 1L)
+    if (nrow(x) %% 2L == 1L)
+        x <- bm_extend(x, bottom = 1L)
+    switch(direction,
+           b = bm_compress_both(x),
+           h = bm_compress_horizontal(x),
+           v = bm_compress_vertical(x))
+}
+
+bm_compress_both <- function(x) {
+    m <- matrix(0L, nrow = nrow(x) / 2L, ncol = ncol(x) / 2L)
     for (i in seq_len(nrow(m))) {
         for (j in seq_len(ncol(m))) {
-            pixels <- bitmap[seq(2L * (i - 1L) + 1L, length.out = 2L),
+            pixels <- x[seq(2L * (i - 1L) + 1L, length.out = 2L),
                              seq(2L * (j - 1L) + 1L, length.out = 2L)]
             int <- mode_int(pixels)
-            pixels[which(pixels > 0)] <- 1L
+            pixels[which(as.logical(pixels > 0))] <- 1L
             pixels <- paste(as.character(pixels), collapse = "")
             new <- switch(pixels,
                           "1111" = 1L,
@@ -75,11 +140,11 @@ bm_compress_both <- function(bitmap) {
     }
     bm_bitmap(m)
 }
-bm_compress_vertical <- function(bitmap) {
-    m <- matrix(0L, nrow = nrow(bitmap) / 2L, ncol = ncol(bitmap))
+bm_compress_vertical <- function(x) {
+    m <- matrix(0L, nrow = nrow(x) / 2L, ncol = ncol(x))
     for (i in seq_len(nrow(m))) {
         for (j in seq_len(ncol(m))) {
-            pixels <- bitmap[seq(2L * (i - 1L) + 1L, length.out = 2L), j]
+            pixels <- x[seq(2L * (i - 1L) + 1L, length.out = 2L), j]
             int <- mode_int(pixels)
             pixels[pixels > 0] <- 1L
             pixels <- paste(as.character(pixels), collapse = "")
@@ -94,11 +159,11 @@ bm_compress_vertical <- function(bitmap) {
     }
     bm_bitmap(m)
 }
-bm_compress_horizontal <- function(bitmap) {
-    m <- matrix(0L, nrow = nrow(bitmap), ncol = ncol(bitmap) / 2L)
+bm_compress_horizontal <- function(x) {
+    m <- matrix(0L, nrow = nrow(x), ncol = ncol(x) / 2L)
     for (i in seq_len(nrow(m))) {
         for (j in seq_len(ncol(m))) {
-            pixels <- bitmap[i, seq(2L * (j - 1L) + 1L, length.out = 2L)]
+            pixels <- x[i, seq(2L * (j - 1L) + 1L, length.out = 2L)]
             int <- mode_int(pixels)
             pixels[pixels > 0] <- 1L
             pixels <- paste(as.character(pixels), collapse = "")

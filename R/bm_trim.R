@@ -1,11 +1,9 @@
 #' Trim bitmaps
 #'
-#' `bm_trim()` trims [bm_bitmap()] objects reducing the number of pixels.
-#' The directions and amount of removed pixels are settable
-#' (defaulting to `0L`).
+#' `bm_trim()` trims bitmap objects reducing the number of pixels.
+#' The directions and amount of removed pixels are settable.
 #'
 #' @inheritParams bm_clamp
-#' @inherit bm_clamp return
 #' @param sides If not `NULL` then an integer vector indicating how
 #'              many pixels to trim on all four sides.
 #'              If the integer vector is of length one it indicates the number of pixels for all four sides.
@@ -35,16 +33,23 @@
 #'              "centre", "center", and "centre-top" are aliases for "center-top".
 #'              "centre-bottom" is an alias for "center-bottom".
 #'              Note if "top" we will trim on the bottom (and vice-versa).
+#' @inherit bm_clamp return
 #' @examples
-#'  font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
-#'  font <- read_hex(font_file)
-#'  capital_r <- font[[str2ucp("R")]]
-#'  print(capital_r, px = c("-", "#"))
-#'  capital_r_trimmed <- bm_trim(capital_r, c(1, 1, 3, 0))
-#'  print(capital_r_trimmed, px = c("-", "#"))
+#' font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+#' font <- read_hex(font_file)
+#' capital_r <- font[[str2ucp("R")]]
+#' print(capital_r)
+#' capital_r_trimmed <- bm_trim(capital_r, c(1, 1, 3, 0))
+#' print(capital_r_trimmed)
+#' corn <- farming_crops_16x16()$corn$portrait
+#' print(bm_padding_lengths(corn))
+#' corn_trimmed <- bm_trim(corn, top = 1L, right = 1L, bottom = 1L)
+#' if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L) {
+#'   print(corn_trimmed, bg = "cyan", compress = "v")
+#' }
 #' @seealso [bm_extend()], [bm_pad()], and [bm_resize()].
 #' @export
-bm_trim <- function(bm_object, sides = NULL,
+bm_trim <- function(x, sides = NULL,
                     top = NULL, right = NULL, bottom = NULL, left = NULL,
                     width = NULL, height = NULL,
                     hjust = "center-left", vjust = "center-top") {
@@ -56,42 +61,119 @@ bm_trim <- function(bm_object, sides = NULL,
     stopifnot(missing(width) || (missing(left)) || missing(right))
     stopifnot(missing(hjust) || (missing(left) && missing(right)))
     stopifnot(missing(vjust) || (missing(left) && missing(right)))
-
-    modify_bm_bitmaps(bm_object, bm_trim_bitmap, sides = sides,
-                      top = top, right = right, bottom = bottom, left = left,
-                      width = width, height = height,
-                      hjust = hjust, vjust = vjust)
+    UseMethod("bm_trim")
 }
 
-bm_trim_bitmap <- function(bitmap, sides = NULL,
+#' @rdname bm_trim
+#' @export
+bm_trim.bm_matrix <- function(x, sides = NULL,
+                              top = NULL, right = NULL, bottom = NULL, left = NULL,
+                              width = NULL, height = NULL,
+                              hjust = "center-left", vjust = "center-top") {
+    bm_trim_bitmap(x,
+                   sides = sides,
+                   top = top, right = right, bottom = bottom, left = left,
+                   width = width, height = height,
+                   hjust = hjust, vjust = vjust)
+}
+
+#' @rdname bm_trim
+#' @export
+bm_trim.bm_list <- function(x, ...) {
+    bm_lapply(x, bm_trim, ...)
+}
+
+#' @rdname bm_trim
+#' @export
+`bm_trim.magick-image` <- function(x, sides = NULL,
+                                   top = NULL, right = NULL, bottom = NULL, left = NULL,
+                                   width = NULL, height = NULL,
+                                   hjust = "center-left", vjust = "center-top") {
+    bm_trim_bitmap(x,
+                   sides = sides,
+                   top = top, right = right, bottom = bottom, left = left,
+                   width = width, height = height,
+                   hjust = hjust, vjust = vjust)
+}
+
+#' @rdname bm_trim
+#' @export
+bm_trim.nativeRaster <- function(x, sides = NULL,
+                                 top = NULL, right = NULL, bottom = NULL, left = NULL,
+                                 width = NULL, height = NULL,
+                                 hjust = "center-left", vjust = "center-top") {
+    # Use `nara::nr_crop()` or `nara::nr_crop2()`?
+    pm <- as_bm_pixmap.nativeRaster(x)
+    pm <- bm_trim_bitmap(pm,
+                         sides = sides,
+                         top = top, right = right, bottom = bottom, left = left,
+                         width = width, height = height,
+                         hjust = hjust, vjust = vjust)
+    as.raster(pm, native = TRUE)
+}
+
+#' @rdname bm_trim
+#' @export
+bm_trim.raster <- function(x, sides = NULL,
+                           top = NULL, right = NULL, bottom = NULL, left = NULL,
+                           width = NULL, height = NULL,
+                           hjust = "center-left", vjust = "center-top") {
+    bm_trim_bitmap(x,
+                   sides = sides,
+                   top = top, right = right, bottom = bottom, left = left,
+                   width = width, height = height,
+                   hjust = hjust, vjust = vjust)
+}
+
+bm_trim_bitmap <- function(x, sides = NULL,
                            top = NULL, right = NULL, bottom = NULL, left = NULL,
                            width = NULL, height = NULL,
                            hjust = "center-left", vjust = "center-top") {
     d <- list(top = top %||% 0L, right = right %||% 0L,
               bottom = bottom %||% 0L, left = left %||% 0L)
 
-    nc <- ncol(bitmap)
-    nr <- nrow(bitmap)
+    nc <- bm_widths(x)
+    nr <- bm_heights(x)
 
     if (!is.null(sides))
         d <- adjust_d_sides(sides, d)
     if (!is.null(width))
-        d <- adjust_d_width_trim(bitmap, width, hjust, d, left, right)
+        d <- adjust_d_width_trim(x, width, hjust, d, left, right)
     if (!is.null(height))
-        d <- adjust_d_height_trim(bitmap, height, vjust, d, top, bottom)
+        d <- adjust_d_height_trim(x, height, vjust, d, top, bottom)
     stopifnot(min(unlist(d)) >= 0L)
     stopifnot(nc >= d$left + d$right)
     stopifnot(nr >= d$top + d$bottom)
 
-    if (d$right > 0L)
-        bitmap <- bitmap[, -seq(nc, by = -1L, length.out = d$right)]
-    if (d$left > 0L)
-        bitmap <- bitmap[, -seq(d$left)]
-    if (d$top > 0L)
-        bitmap <- bitmap[-seq(nr, by = -1L, length.out = d$top), ]
-    if (d$bottom > 0L)
-        bitmap <- bitmap[-seq(d$bottom), ]
-    as_bm_bitmap(bitmap)
+    bm_trim_simple(x, d$top, d$right, d$bottom, d$left)
+}
+
+bm_trim_simple <- function(x, top = 0L, right = 0L, bottom = 0L, left = 0L) {
+    UseMethod("bm_trim_simple")
+}
+
+#' @export
+bm_trim_simple.bm_matrix <- function(x, top = 0L, right = 0L, bottom = 0L, left = 0L) {
+    x[seq.int(1L + bottom, nrow(x) - top),
+      seq.int(1L + left, ncol(x) - right),
+      drop = FALSE]
+}
+
+#' @export
+`bm_trim_simple.magick-image` <- function(x, top = 0L, right = 0L, bottom = 0L, left = 0L) {
+    stopifnot(requireNamespace("magick", quietly = TRUE))
+    geometry <- sprintf("%dx%d+%d+%d",
+                        magick::image_info(x)$width - left - right,
+                        magick::image_info(x)$height - top - bottom,
+                        left, top)
+    magick::image_crop(x, geometry)
+}
+
+#' @export
+bm_trim_simple.raster <- function(x, top = 0L, right = 0L, bottom = 0L, left = 0L) {
+    x[seq.int(1L + top, nrow(x) - bottom),
+      seq.int(1L + left, ncol(x) - right),
+      drop = FALSE]
 }
 
 adjust_d_width_trim <- function(bitmap, width, hjust, d, left, right) {

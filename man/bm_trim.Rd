@@ -2,10 +2,69 @@
 % Please edit documentation in R/bm_trim.R
 \name{bm_trim}
 \alias{bm_trim}
+\alias{bm_trim.bm_matrix}
+\alias{bm_trim.bm_list}
+\alias{bm_trim.magick-image}
+\alias{bm_trim.nativeRaster}
+\alias{bm_trim.raster}
 \title{Trim bitmaps}
 \usage{
 bm_trim(
-  bm_object,
+  x,
+  sides = NULL,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  width = NULL,
+  height = NULL,
+  hjust = "center-left",
+  vjust = "center-top"
+)
+
+\method{bm_trim}{bm_matrix}(
+  x,
+  sides = NULL,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  width = NULL,
+  height = NULL,
+  hjust = "center-left",
+  vjust = "center-top"
+)
+
+\method{bm_trim}{bm_list}(x, ...)
+
+\method{bm_trim}{`magick-image`}(
+  x,
+  sides = NULL,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  width = NULL,
+  height = NULL,
+  hjust = "center-left",
+  vjust = "center-top"
+)
+
+\method{bm_trim}{nativeRaster}(
+  x,
+  sides = NULL,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  width = NULL,
+  height = NULL,
+  hjust = "center-left",
+  vjust = "center-top"
+)
+
+\method{bm_trim}{raster}(
+  x,
   sides = NULL,
   top = NULL,
   right = NULL,
@@ -18,7 +77,7 @@ bm_trim(
 )
 }
 \arguments{
-\item{bm_object}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}},  or \code{\link[=bm_font]{bm_font()}} object.}
+\item{x}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{"magick-image"}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{"raster"}  object.}
 
 \item{sides}{If not \code{NULL} then an integer vector indicating how
 many pixels to trim on all four sides.
@@ -57,22 +116,29 @@ it one pixel down or up respectively.
 "centre", "center", and "centre-top" are aliases for "center-top".
 "centre-bottom" is an alias for "center-bottom".
 Note if "top" we will trim on the bottom (and vice-versa).}
+
+\item{...}{Additional arguments to be passed to or from methods.}
 }
 \value{
-Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}}, or \code{\link[=bm_font]{bm_font()}} object.
+Depending on \code{x} either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{magick-image}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{raster}  object.
 }
 \description{
-\code{bm_trim()} trims \code{\link[=bm_bitmap]{bm_bitmap()}} objects reducing the number of pixels.
-The directions and amount of removed pixels are settable
-(defaulting to \code{0L}).
+\code{bm_trim()} trims bitmap objects reducing the number of pixels.
+The directions and amount of removed pixels are settable.
 }
 \examples{
- font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
- font <- read_hex(font_file)
- capital_r <- font[[str2ucp("R")]]
- print(capital_r, px = c("-", "#"))
- capital_r_trimmed <- bm_trim(capital_r, c(1, 1, 3, 0))
- print(capital_r_trimmed, px = c("-", "#"))
+font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+font <- read_hex(font_file)
+capital_r <- font[[str2ucp("R")]]
+print(capital_r)
+capital_r_trimmed <- bm_trim(capital_r, c(1, 1, 3, 0))
+print(capital_r_trimmed)
+corn <- farming_crops_16x16()$corn$portrait
+print(bm_padding_lengths(corn))
+corn_trimmed <- bm_trim(corn, top = 1L, right = 1L, bottom = 1L)
+if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L) {
+  print(corn_trimmed, bg = "cyan", compress = "v")
+}
 }
 \seealso{
 \code{\link[=bm_extend]{bm_extend()}}, \code{\link[=bm_pad]{bm_pad()}}, and \code{\link[=bm_resize]{bm_resize()}}.

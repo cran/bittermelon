@@ -2,10 +2,70 @@
 % Please edit documentation in R/bm_mask.R
 \name{bm_mask}
 \alias{bm_mask}
+\alias{bm_mask.bm_bitmap}
+\alias{bm_mask.bm_pixmap}
+\alias{bm_mask.magick-image}
+\alias{bm_mask.nativeRaster}
+\alias{bm_mask.raster}
+\alias{bm_mask.bm_list}
 \title{Modify bitmaps via masking with a 'mask' bitmap}
 \usage{
 bm_mask(
-  bm_object,
+  x,
+  mask = NULL,
+  base = NULL,
+  mode = c("luminance", "alpha"),
+  hjust = "center-left",
+  vjust = "center-top"
+)
+
+\method{bm_mask}{bm_bitmap}(
+  x,
+  mask = NULL,
+  base = NULL,
+  mode = c("luminance", "alpha"),
+  hjust = "center-left",
+  vjust = "center-top"
+)
+
+\method{bm_mask}{bm_pixmap}(
+  x,
+  mask = NULL,
+  base = NULL,
+  mode = c("luminance", "alpha"),
+  hjust = "center-left",
+  vjust = "center-top"
+)
+
+\method{bm_mask}{`magick-image`}(
+  x,
+  mask = NULL,
+  base = NULL,
+  mode = c("luminance", "alpha"),
+  hjust = "center-left",
+  vjust = "center-top"
+)
+
+\method{bm_mask}{nativeRaster}(
+  x,
+  mask = NULL,
+  base = NULL,
+  mode = c("luminance", "alpha"),
+  hjust = "center-left",
+  vjust = "center-top"
+)
+
+\method{bm_mask}{raster}(
+  x,
+  mask = NULL,
+  base = NULL,
+  mode = c("luminance", "alpha"),
+  hjust = "center-left",
+  vjust = "center-top"
+)
+
+\method{bm_mask}{bm_list}(
+  x,
   mask = NULL,
   base = NULL,
   mode = c("luminance", "alpha"),
@@ -14,12 +74,13 @@ bm_mask(
 )
 }
 \arguments{
-\item{bm_object}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}},  or \code{\link[=bm_font]{bm_font()}} object.}
+\item{x}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{"magick-image"}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{"raster"}  object.}
 
-\item{mask}{A 'bm_bitmap()' object to use as a \dQuote{mask}.
-Only one of \code{mask} or \code{base} may be set.}
+\item{mask}{An object to use as a binary bitmap \dQuote{mask}.
+Only one of \code{mask} or \code{base} may be set.
+Will be coerced to a \code{\link[=bm_bitmap]{bm_bitmap()}} object by \code{\link[=as_bm_bitmap]{as_bm_bitmap()}}.}
 
-\item{base}{A 'bm_bitmap()' object which will be \dQuote{masked} by \code{mask}.
+\item{base}{A bitmap/pixmap object which will be \dQuote{masked} by \code{mask}.
 Only one of \code{mask} or \code{base} may be set.}
 
 \item{mode}{Either "luminance" (default) or "alpha".}
@@ -39,43 +100,55 @@ it one pixel down or up respectively.
 "centre-bottom" is an alias for "center-bottom".}
 }
 \value{
-Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}}, or \code{\link[=bm_font]{bm_font()}} object.
+A bitmap/pixmap object that is the same type as \code{x} (if \code{base} is \code{NULL}) or \code{base}.
 }
 \description{
 \code{bm_mask()} modifies bitmaps by using a binary bitmap \dQuote{mask}
-to set certain elements to zero.
+to set certain elements to a background value.
 }
 \details{
 If necessary bitmaps will be extended by \code{bm_extend()} such that
 they are the same size.
-If necessary the \code{mask} will be coerced into a \dQuote{binary} mask.
+If necessary the \code{mask} will be coerced into a \dQuote{binary} mask
+by \code{bm_clamp(as_bm_bitmap(mask))}.
 If \code{mode} is "luminance" then where the \code{mask} is \code{1L}
-the corresponding pixel in \code{base} will be coerced to \code{0L}.
+the corresponding pixel in \code{base} will be coerced to the background value.
 If \code{mode} is "alpha" then where the \code{mask} is \code{0L}
-the corresponding pixel in \code{base} will be coerced to \code{0L}
+the corresponding pixel in \code{base} will be coerced to the background value.
 }
 \examples{
- if (require("grid") && capabilities("png")) {
-   font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
-   font <- read_hex(font_file)
-   one <- font[[str2ucp("1")]]
-   circle_large <- as_bm_bitmap(circleGrob(r = 0.50), width = 16L, height = 16L)
-   circle_small <- as_bm_bitmap(circleGrob(r = 0.40), width = 16L, height = 16L)
+if (require("grid", quietly = TRUE) && capabilities("png")) {
+  font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+  font <- read_hex(font_file)
+  one <- font[[str2ucp("1")]]
+  circle_large <- as_bm_bitmap(circleGrob(r = 0.50), width = 16L, height = 16L)
+  circle_small <- as_bm_bitmap(circleGrob(r = 0.40), width = 16L, height = 16L)
+  circle_outline <- bm_mask(circle_large, circle_small)
+  print(circle_outline)
+}
+if (capabilities("png")) {
+  # U+2776 "Dingbat Negative Circled Digit One"
+  circle_minus_one <- bm_mask(circle_large, one)
+  print(circle_minus_one)
+}
+# Can also do "alpha" mask
+square_full <- bm_bitmap(matrix(1L, nrow = 16L, ncol = 16L))
+square_minus_lower_left <- square_full
+square_minus_lower_left[1:8, 1:8] <- 0L
+print(square_minus_lower_left)
+if (capabilities("png")) {
+  circle_minus_lower_left <- bm_mask(circle_large, square_minus_lower_left, mode = "alpha")
+  print(circle_minus_lower_left)
+}
 
-   circle_outline <- bm_mask(circle_large, circle_small)
-   print(circle_outline, px = px_ascii)
-
-   # U+2776 "Dingbat Negative Circled Digit One"
-   circle_minus_one <- bm_mask(circle_large, one)
-   print(circle_minus_one, px = px_ascii)
-
-   # Can also do "alpha" mask
-   square_full <- bm_bitmap(matrix(1L, nrow = 16L, ncol = 16L))
-   square_minus_lower_left <- square_full
-   square_minus_lower_left[1:8, 1:8] <- 0L
-   print(square_minus_lower_left, px = px_ascii)
-
-   circle_minus_lower_left <- bm_mask(circle_large, square_minus_lower_left, mode = "alpha")
-   print(circle_minus_lower_left, px = px_ascii)
- }
+if (capabilities("png")) {
+  m <- matrix(grDevices::rainbow(8L), byrow = TRUE, ncol = 8L, nrow = 8L)
+  rainbow <- bm_expand(as_bm_pixmap(m), 2L)
+  circle_rainbow <- bm_mask(rainbow, circle_large, mode = "alpha")
+}
+if (cli::is_utf8_output() && 
+    cli::num_ansi_colors() >= 256L &&
+    capabilities("png")) {
+  print(circle_rainbow, compress = "v")
+}
 }

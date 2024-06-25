@@ -4,10 +4,10 @@
 \alias{bm_call}
 \title{Execute a function call on bitmap objects}
 \usage{
-bm_call(bm_object, .f, ...)
+bm_call(x, .f, ...)
 }
 \arguments{
-\item{bm_object}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}},  or \code{\link[=bm_font]{bm_font()}} object.}
+\item{x}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{"magick-image"}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{"raster"}  object.}
 
 \item{.f}{A function to execute.}
 
@@ -28,5 +28,5 @@ plus it is easier to specify additional arguments.
   bml <- as_bm_list("RSTATS", font = font)
   bml <- bm_flip(bml, "both")
   bm <- bm_call(bml, cbind, direction = "RTL")
-  print(bm, px = px_ascii)
+  print(bm)
 }

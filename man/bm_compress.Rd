@@ -2,21 +2,48 @@
 % Please edit documentation in R/bm_compress.R
 \name{bm_compress}
 \alias{bm_compress}
-\title{Compress bitmaps using a "block elements" scheme}
+\alias{bm_compress.bm_bitmap}
+\alias{bm_compress.bm_pixmap}
+\alias{bm_compress.magick-image}
+\alias{bm_compress.nativeRaster}
+\alias{bm_compress.raster}
+\alias{bm_compress.bm_list}
+\title{Compress bitmaps by a factor of two}
 \usage{
-bm_compress(bm_object, direction = "vertical")
+bm_compress(x, direction = "vertical", ...)
+
+\method{bm_compress}{bm_bitmap}(x, direction = "vertical", ...)
+
+\method{bm_compress}{bm_pixmap}(x, direction = "vertical", ..., filter = "Point")
+
+\method{bm_compress}{`magick-image`}(x, direction = "vertical", ..., filter = "Point")
+
+\method{bm_compress}{nativeRaster}(x, direction = "vertical", ..., filter = "Point")
+
+\method{bm_compress}{raster}(x, direction = "vertical", ..., filter = "Point")
+
+\method{bm_compress}{bm_list}(x, ...)
 }
 \arguments{
-\item{bm_object}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}},  or \code{\link[=bm_font]{bm_font()}} object.}
+\item{x}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{"magick-image"}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{"raster"}  object.}
 
 \item{direction}{Either "vertical" or "v", "horizontal" or "h",
 OR "both" or "b".}
+
+\item{...}{Additional arguments to be passed to or from methods.}
+
+\item{filter}{Passed to \code{\link[magick:transform]{magick::image_resize()}}.
+Use \code{\link[magick:options]{magick::filter_types()}} for list of supported filters.
+The default "Point" filter will maintain your sprite's color palette.
+\code{NULL} will give you the \code{magick}'s default filter which may work better
+if you are not trying to maintain a sprite color palette.}
 }
 \value{
-Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}}, or \code{\link[=bm_font]{bm_font()}} object.
+Depending on \code{x} either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{magick-image}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{raster}  object.
 }
 \description{
-Compress bitmaps by a factor of two by re-mapping to a \dQuote{block elements} scheme.
+Compresses \code{\link[=bm_bitmap]{bm_bitmap()}} objects by a factor of two by re-mapping to a \dQuote{block elements} scheme.
+For pixmap objects like \code{\link[=bm_pixmap]{bm_pixmap()}} we simply shrink the pixmap by a factor of two using \code{\link[=bm_distort]{bm_distort()}}.
 }
 \details{
 Depending on \code{direction} we shrink the bitmaps height and/or width by
@@ -32,13 +59,22 @@ Hence \code{print.bm_bitmap()} should produce reasonable results for compressed 
 either of them are used as the \code{px} argument.
 }
 \examples{
-  font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
-  font <- read_hex(font_file)
-  r <- font[[str2ucp("R")]]
-  print(r, px = px_ascii)
-  print(bm_compress(r, "vertical"), px = px_ascii)
-  print(bm_compress(r, "horizontal"), px = px_ascii)
-  print(bm_compress(r, "both"), px = px_ascii)
+font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+font <- read_hex(font_file)
+r <- font[[str2ucp("R")]]
+print(r)
+print(bm_compress(r, "vertical"))
+print(bm_compress(r, "horizontal"))
+print(bm_compress(r, "both"))
+
+img <- png::readPNG(system.file("img", "Rlogo.png", package="png"))
+logo <- as_bm_pixmap(img)
+if (cli::is_utf8_output() && 
+    cli::num_ansi_colors() > 256L &&
+    requireNamespace("magick", quietly = TRUE)) {
+  logo_c <- bm_compress(pm, "both", filter = NULL)
+  print(logo_c, compress = "v")
+}
 }
 \seealso{
 See \url{https://en.wikipedia.org/wiki/Block_Elements} for more info on the Unicode Block Elements block.

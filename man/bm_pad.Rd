@@ -2,11 +2,74 @@
 % Please edit documentation in R/bm_pad.R
 \name{bm_pad}
 \alias{bm_pad}
+\alias{bm_pad.bm_bitmap}
+\alias{bm_pad.bm_list}
+\alias{bm_pad.bm_pixmap}
+\alias{bm_pad.magick-image}
+\alias{bm_pad.nativeRaster}
+\alias{bm_pad.raster}
 \title{Adjust bitmap padding lengths}
 \usage{
 bm_pad(
-  bm_object,
+  x,
+  value,
+  type = c("exact", "extend", "trim"),
+  sides = NULL,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL
+)
+
+\method{bm_pad}{bm_bitmap}(
+  x,
   value = 0L,
+  type = c("exact", "extend", "trim"),
+  sides = NULL,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL
+)
+
+\method{bm_pad}{bm_list}(x, ...)
+
+\method{bm_pad}{bm_pixmap}(
+  x,
+  value = col2hex("transparent"),
+  type = c("exact", "extend", "trim"),
+  sides = NULL,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL
+)
+
+\method{bm_pad}{`magick-image`}(
+  x,
+  value = "transparent",
+  type = c("exact", "extend", "trim"),
+  sides = NULL,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL
+)
+
+\method{bm_pad}{nativeRaster}(
+  x,
+  value = col2int("transparent"),
+  type = c("exact", "extend", "trim"),
+  sides = NULL,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL
+)
+
+\method{bm_pad}{raster}(
+  x,
+  value = "transparent",
   type = c("exact", "extend", "trim"),
   sides = NULL,
   top = NULL,
@@ -16,9 +79,9 @@ bm_pad(
 )
 }
 \arguments{
-\item{bm_object}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}},  or \code{\link[=bm_font]{bm_font()}} object.}
+\item{x}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{"magick-image"}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{"raster"}  object.}
 
-\item{value}{Integer value for the new pixels.}
+\item{value}{Value for the new pixels.}
 
 \item{type}{Either "exact", `"extend", or "trim".
 "exact" makes sure the padding is exactly the indicated amount,
@@ -40,20 +103,28 @@ This is the same scheme as used by the CSS padding and margin properties.}
 \item{bottom}{Desired number of pixels of padding on the bottom.}
 
 \item{left}{Desired number of pixels of padding on the left.}
+
+\item{...}{Additional arguments to be passed to or from methods.}
 }
 \value{
-Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}}, or \code{\link[=bm_font]{bm_font()}} object.
+Depending on \code{x} either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{magick-image}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{raster}  object.
 }
 \description{
 \code{bm_pad()} adjusts bitmap padding lengths.
 }
 \examples{
- font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
- font <- read_hex(font_file)
- capital_r <- font[[str2ucp("R")]]
- print(capital_r, px = c(".", "#"))
- capital_r_padded <- bm_pad(capital_r, sides = 2L)
- print(capital_r_padded, px = c(".", "#"))
+font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+font <- read_hex(font_file)
+capital_r <- font[[str2ucp("R")]]
+print(capital_r)
+capital_r_padded <- bm_pad(capital_r, sides = 2L)
+print(capital_r_padded)
+crops <- farming_crops_16x16()
+corn <- crops$corn$portrait
+corn_pad4 <- bm_pad(corn, sides = 4L)
+if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L) {
+  print(corn_pad4, compress = "v", bg = "cyan")
+}
 }
 \seealso{
 \code{\link[=bm_extend]{bm_extend()}}, \code{\link[=bm_resize]{bm_resize()}}, and \code{\link[=bm_trim]{bm_trim()}}

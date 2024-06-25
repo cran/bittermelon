@@ -2,17 +2,45 @@
 % Please edit documentation in R/as_bm_bitmap.R
 \name{as_bm_bitmap}
 \alias{as_bm_bitmap}
-\alias{as_bm_bitmap.matrix}
+\alias{as_bm_bitmap.array}
 \alias{as_bm_bitmap.default}
+\alias{as_bm_bitmap.bm_bitmap}
+\alias{as_bm_bitmap.bm_pixmap}
 \alias{as_bm_bitmap.character}
+\alias{as_bm_bitmap.glyph_bitmap}
 \alias{as_bm_bitmap.grob}
-\title{Coerce to bitmap glyph objects}
+\alias{as_bm_bitmap.magick-image}
+\alias{as_bm_bitmap.matrix}
+\alias{as_bm_bitmap.maze}
+\alias{as_bm_bitmap.nativeRaster}
+\alias{as_bm_bitmap.pattern_square}
+\alias{as_bm_bitmap.pattern_weave}
+\alias{as_bm_bitmap.pixeltrix}
+\alias{as_bm_bitmap.pixmapGrey}
+\alias{as_bm_bitmap.pixmapIndexed}
+\alias{as_bm_bitmap.pixmapRGB}
+\alias{as_bm_bitmap.raster}
+\title{Cast to a bitmap matrix object}
 \usage{
 as_bm_bitmap(x, ...)
 
-\method{as_bm_bitmap}{matrix}(x, ...)
+\method{as_bm_bitmap}{array}(
+  x,
+  ...,
+  mode = c("alpha", "darkness", "brightness"),
+  threshold = 0.5
+)
 
 \method{as_bm_bitmap}{default}(x, ...)
+
+\method{as_bm_bitmap}{bm_bitmap}(x, ...)
+
+\method{as_bm_bitmap}{bm_pixmap}(
+  x,
+  ...,
+  mode = c("alpha", "darkness", "brightness"),
+  threshold = 0.5
+)
 
 \method{as_bm_bitmap}{character}(
   x,
@@ -25,6 +53,8 @@ as_bm_bitmap(x, ...)
   pua_combining = character(0)
 )
 
+\method{as_bm_bitmap}{glyph_bitmap}(x, ..., threshold = 0.5)
+
 \method{as_bm_bitmap}{grob}(
   x,
   ...,
@@ -33,11 +63,69 @@ as_bm_bitmap(x, ...)
   png_device = NULL,
   threshold = 0.25
 )
+
+\method{as_bm_bitmap}{`magick-image`}(
+  x,
+  ...,
+  mode = c("alpha", "darkness", "brightness"),
+  threshold = 0.5
+)
+
+\method{as_bm_bitmap}{matrix}(x, ...)
+
+\method{as_bm_bitmap}{maze}(
+  x,
+  ...,
+  walls = FALSE,
+  start = NULL,
+  end = NULL,
+  solve = !is.null(start) && !is.null(end)
+)
+
+\method{as_bm_bitmap}{nativeRaster}(
+  x,
+  ...,
+  mode = c("alpha", "darkness", "brightness"),
+  threshold = 0.5
+)
+
+\method{as_bm_bitmap}{pattern_square}(x, ...)
+
+\method{as_bm_bitmap}{pattern_weave}(x, ...)
+
+\method{as_bm_bitmap}{pattern_square}(x, ...)
+
+\method{as_bm_bitmap}{pixeltrix}(x, ...)
+
+\method{as_bm_bitmap}{pixmapGrey}(x, ..., mode = c("darkness", "brightness"), threshold = 0.5)
+
+\method{as_bm_bitmap}{pixmapIndexed}(x, ...)
+
+\method{as_bm_bitmap}{pixmapRGB}(x, ..., mode = c("darkness", "brightness"), threshold = 0.5)
+
+\method{as_bm_bitmap}{raster}(
+  x,
+  ...,
+  mode = c("alpha", "darkness", "brightness"),
+  threshold = 0.5
+)
 }
 \arguments{
 \item{x}{An object that can reasonably be coerced to a \code{bm_bitmap()} object.}
 
 \item{...}{Further arguments passed to or from other methods.}
+
+\item{mode}{Method to determine the integer values of the \code{bm_bitmap()} object:
+\describe{
+\item{alpha}{Higher alpha values get a \code{1L}.}
+\item{darkness}{Higher darkness values get a \code{1L}.  \code{darkness = (1 - luma) * alpha}.}
+\item{brightness}{Higher brightness values get a \code{1L}.  \code{brightness = luma * alpha}.}
+}}
+
+\item{threshold}{If the alpha/darkness/brightness value
+weakly exceeds this threshold
+(on an interval from zero to one)
+then the pixel is determined to be \dQuote{black}.}
 
 \item{direction}{For purely horizontal binding either "left-to-right" (default) or its aliases "ltr" and "lr"
 OR "right-to-left" or its aliases "rtl" and "rl".
@@ -76,9 +164,13 @@ with a transparent background.  By default will use \code{\link[ragg:agg_png]{ra
 if available else the \dQuote{cairo} version of \code{\link[grDevices:png]{grDevices::png()}}
 if available else just \code{\link[grDevices:png]{grDevices::png()}}.}
 
-\item{threshold}{If any png channel weakly exceeds this threshold
-(on an interval from zero to one)
-then the pixel is determined to be \dQuote{black}.}
+\item{walls}{If \code{TRUE} the values of 1L denote the walls and the values of 0L denote the paths.}
+
+\item{start, end}{If not \code{NULL} mark the \code{start} and \code{end} as value 2L.
+See \code{\link[mazing:find_maze_refpoint]{mazing::find_maze_refpoint()}}.}
+
+\item{solve}{If \code{TRUE} then mark the solution path from \code{start} to \code{end} as value 3L.
+See \code{\link[mazing:solve_maze]{mazing::solve_maze()}}.}
 }
 \value{
 A \code{bm_bitmap()} object.
@@ -87,24 +179,40 @@ A \code{bm_bitmap()} object.
 \code{as_bm_bitmap()} turns an existing object into a \code{bm_bitmap()} object.
 }
 \examples{
- space_matrix <- matrix(0L, nrow = 16L, ncol = 16L)
- space_glyph <- as_bm_bitmap(space_matrix)
- is_bm_bitmap(space_glyph)
-  font_file <- system.file("fonts/fixed/4x6.yaff.gz", package = "bittermelon")
-  font <- read_yaff(font_file)
-  bm <- as_bm_bitmap("RSTATS", font = font)
-  print(bm, px = px_ascii)
-  bm <- as_bm_bitmap("RSTATS", direction = "top-to-bottom", font = font)
-  print(bm, px = px_ascii)
+space_matrix <- matrix(0L, nrow = 16L, ncol = 16L)
+space_glyph <- as_bm_bitmap(space_matrix)
+is_bm_bitmap(space_glyph)
 
- if (require("grid") && capabilities("png")) {
-   circle <- as_bm_bitmap(circleGrob(r = 0.25), width = 16L, height = 16L)
-   print(circle, px = c(".", "@"))
+font_file <- system.file("fonts/fixed/4x6.yaff.gz", package = "bittermelon")
+font <- read_yaff(font_file)
+bm <- as_bm_bitmap("RSTATS", font = font)
+print(bm)
 
-   inverted_exclamation <- as_bm_bitmap(textGrob("!", rot = 180),
-                                        width = 8L, height = 16L)
-   print(inverted_exclamation, px = c(".", "@"))
- }
+bm <- as_bm_bitmap("RSTATS", direction = "top-to-bottom", font = font)
+print(bm)
+
+if (require("grid") && capabilities("png")) {
+  circle <- as_bm_bitmap(circleGrob(r = 0.25), width = 16L, height = 16L)
+  print(circle)
+}
+
+if (require("grid") && capabilities("png")) {
+  inverted_exclamation <- as_bm_bitmap(textGrob("!", rot = 180),
+                                       width = 8L, height = 16L)
+  print(inverted_exclamation)
+}
+
+if (requireNamespace("mazing", quietly = TRUE)) {
+  m <- mazing::maze(16, 32)
+  bm <- as_bm_bitmap(m, walls = TRUE)
+  print(bm, compress = "vertical")
+}
+
+if (requireNamespace("gridpattern", quietly = TRUE)) {
+  w <- gridpattern::pattern_weave("twill_herringbone", nrow=14L, ncol = 40L)
+  bm <- as_bm_bitmap(w)
+  print(bm, compress = "vertical")
+}
 }
 \seealso{
 \code{\link[=bm_bitmap]{bm_bitmap()}}

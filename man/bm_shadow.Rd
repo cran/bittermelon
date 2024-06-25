@@ -2,22 +2,98 @@
 % Please edit documentation in R/bm_shadow.R
 \name{bm_shadow}
 \alias{bm_shadow}
+\alias{bm_shadow.bm_bitmap}
+\alias{bm_shadow.bm_list}
+\alias{bm_shadow.bm_pixmap}
+\alias{bm_shadow.magick-image}
+\alias{bm_shadow.nativeRaster}
+\alias{bm_shadow.raster}
 \alias{bm_bold}
+\alias{bm_bold.bm_bitmap}
+\alias{bm_bold.bm_list}
+\alias{bm_bold.bm_pixmap}
+\alias{bm_bold.magick-image}
+\alias{bm_bold.nativeRaster}
+\alias{bm_bold.raster}
 \alias{bm_glow}
+\alias{bm_glow.bm_bitmap}
+\alias{bm_glow.bm_list}
+\alias{bm_glow.bm_pixmap}
+\alias{bm_glow.magick-image}
+\alias{bm_glow.nativeRaster}
+\alias{bm_glow.raster}
 \title{Bitmap shadow, bold, and glow effects}
 \usage{
 bm_shadow(
-  bm_object,
+  x,
+  value,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  extend = TRUE,
+  bg
+)
+
+\method{bm_shadow}{bm_bitmap}(
+  x,
   value = 2L,
   top = NULL,
   right = NULL,
   bottom = NULL,
   left = NULL,
-  extend = TRUE
+  extend = TRUE,
+  bg = 0L
+)
+
+\method{bm_shadow}{bm_list}(x, ...)
+
+\method{bm_shadow}{bm_pixmap}(
+  x,
+  value = col2hex("black"),
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  extend = TRUE,
+  bg = col2hex("transparent")
+)
+
+\method{bm_shadow}{`magick-image`}(
+  x,
+  value = "black",
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  extend = TRUE,
+  bg = "transparent"
+)
+
+\method{bm_shadow}{nativeRaster}(
+  x,
+  value = col2int("black"),
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  extend = TRUE,
+  bg = "transparent"
+)
+
+\method{bm_shadow}{raster}(
+  x,
+  value = "black",
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  extend = TRUE,
+  bg = "transparent"
 )
 
 bm_bold(
-  bm_object,
+  x,
   value = 1L,
   top = NULL,
   right = NULL,
@@ -26,10 +102,80 @@ bm_bold(
   extend = TRUE
 )
 
-bm_glow(bm_object, value = 2L, extend = TRUE, corner = FALSE)
+\method{bm_bold}{bm_bitmap}(
+  x,
+  value = 1L,
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  extend = TRUE
+)
+
+\method{bm_bold}{bm_list}(x, ...)
+
+\method{bm_bold}{bm_pixmap}(
+  x,
+  value = col2hex("black"),
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  extend = TRUE
+)
+
+\method{bm_bold}{`magick-image`}(
+  x,
+  value = "black",
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  extend = TRUE
+)
+
+\method{bm_bold}{nativeRaster}(
+  x,
+  value = col2int("black"),
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  extend = TRUE
+)
+
+\method{bm_bold}{raster}(
+  x,
+  value = "black",
+  top = NULL,
+  right = NULL,
+  bottom = NULL,
+  left = NULL,
+  extend = TRUE
+)
+
+bm_glow(x, value, extend = TRUE, corner = FALSE, bg)
+
+\method{bm_glow}{bm_bitmap}(x, value = 2L, extend = TRUE, corner = FALSE, bg = 0L)
+
+\method{bm_glow}{bm_list}(x, ...)
+
+\method{bm_glow}{bm_pixmap}(
+  x,
+  value = col2hex("black"),
+  extend = TRUE,
+  corner = FALSE,
+  bg = col2hex("transparent")
+)
+
+\method{bm_glow}{`magick-image`}(x, value = "black", extend = TRUE, corner = FALSE, bg = "transparent")
+
+\method{bm_glow}{nativeRaster}(x, value = "black", extend = TRUE, corner = FALSE, bg = "transparent")
+
+\method{bm_glow}{raster}(x, value = "black", extend = TRUE, corner = FALSE, bg = "transparent")
 }
 \arguments{
-\item{bm_object}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}},  or \code{\link[=bm_font]{bm_font()}} object.}
+\item{x}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{"magick-image"}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{"raster"}  object.}
 
 \item{value}{The integer value for the shadow, bold, or glow effect.}
 
@@ -46,10 +192,14 @@ then defaults to \code{1L} for \code{bm_shadow()} and \code{0L} for \code{bm_emb
 
 \item{extend}{Make the bitmap larger to give the new glyph more "room".}
 
+\item{bg}{Bitmap background value.}
+
+\item{...}{Additional arguments to be passed to or from methods.}
+
 \item{corner}{Fill in the corners.}
 }
 \value{
-Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}}, or \code{\link[=bm_font]{bm_font()}} object.
+Depending on \code{x} either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{magick-image}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{raster}  object.
 }
 \description{
 \code{bm_shadow()} adds a basic "shadow" effect to the bitmap(s).
@@ -57,15 +207,25 @@ Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}
 \code{bm_glow()} adds a basic "glow" effect to the bitmap(s).
 }
 \examples{
- font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
- font <- read_hex(font_file)
- capital_r <- font[[str2ucp("R")]]
- print(capital_r, px = px_ascii)
- print(bm_shadow(capital_r), px = px_ascii)
- print(bm_bold(capital_r), px = px_ascii)
- print(bm_glow(capital_r), px = px_ascii)
- print(bm_glow(capital_r, corner = TRUE), px = px_ascii)
+font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+font <- read_hex(font_file)
+capital_r <- font[[str2ucp("R")]]
+print(capital_r)
+print(bm_shadow(capital_r))
+print(bm_bold(capital_r))
+print(bm_glow(capital_r))
+print(bm_glow(capital_r, corner = TRUE))
 
+corn <- farming_crops_16x16()$corn$portrait
+corn_shadow <- bm_shadow(corn, "red")
+if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L) {
+  print(corn_shadow, compress = "v")
+}
+
+corn_glow <- bm_glow(corn, "cyan", corner = TRUE)
+if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L) {
+  print(corn_glow, compress = "v")
+}
 }
 \seealso{
 \code{\link[=bm_extend]{bm_extend()}} and \code{\link[=bm_shift]{bm_shift()}}

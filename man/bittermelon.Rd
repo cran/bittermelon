@@ -2,36 +2,43 @@
 % Please edit documentation in R/bittermelon-package.R
 \docType{package}
 \name{bittermelon}
-\alias{bittermelon}
 \alias{bittermelon-package}
-\title{bittermelon: Monochrome Bitmap Font Tools}
+\alias{bittermelon}
+\title{bittermelon: Bitmap Tools}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Provides functions for creating and modifying bitmaps with special emphasis on bitmap fonts and their glyphs. Provides native read/write support for the 'hex' and 'yaff' bitmap font formats and if 'Python' is installed can also read/write several more bitmap font formats using an embedded version of 'monobit'.
+Provides functions for creating, modifying, and displaying bitmaps including printing them in the terminal. There is a special emphasis on monochrome bitmap fonts and their glyphs as well as colored pixel art/sprites. Provides native read/write support for the 'hex' and 'yaff' bitmap font formats and if 'monobit' \url{https://github.com/robhagemans/monobit} is installed can also read/write several additional bitmap font formats.
 }
 \section{Package options}{
 
 The following \code{bittermelon} option may be set globally via \code{\link[base:options]{base::options()}}:
 \describe{
-\item{bittermelon.px}{Set new default \code{px} argument value for
-\code{\link[=format.bm_bitmap]{format.bm_bitmap()}} and \code{\link[=print.bm_bitmap]{print.bm_bitmap()}}.
-If unset both functions default to \code{px_unicode} but
-some may prefer \code{px_ascii} which is an ASCII alternative.}
-\item{bittermelon.fg}{Set new default \code{fg} argument value for
-\code{\link[=format.bm_bitmap]{format.bm_bitmap()}} and \code{\link[=print.bm_bitmap]{print.bm_bitmap()}}.}
 \item{bittermelon.bg}{Set new default \code{bg} argument value for
-\code{\link[=format.bm_bitmap]{format.bm_bitmap()}} and \code{\link[=print.bm_bitmap]{print.bm_bitmap()}}.}
+\code{\link[=format.bm_bitmap]{format.bm_bitmap()}}, \code{\link[=format.bm_pixmap]{format.bm_pixmap()}}, \code{\link[=print.bm_bitmap]{print.bm_bitmap()}},
+and \code{\link[=print.bm_pixmap]{print.bm_pixmap()}}.}
+\item{bittermelon.col}{Set new default \code{col} argument value for
+\code{\link[=as.raster.bm_bitmap]{as.raster.bm_bitmap()}} and \code{\link[=plot.bm_bitmap]{plot.bm_bitmap()}}.}
 \item{bittermelon.compress}{Set new default \code{compress} argument value for
+\code{\link[=format.bm_bitmap]{format.bm_bitmap()}}, \code{\link[=format.bm_pixmap]{format.bm_pixmap()}}, \code{\link[=print.bm_bitmap]{print.bm_bitmap()}},
+and \code{\link[=print.bm_pixmap]{print.bm_pixmap()}}.}
+\item{bittermelon.downscale}{Set new default \code{downscale} argument value for
+\code{\link[=format.bm_bitmap]{format.bm_bitmap()}}, \code{\link[=format.bm_pixmap]{format.bm_pixmap()}}, \code{\link[=print.bm_bitmap]{print.bm_bitmap()}},
+and \code{\link[=print.bm_pixmap]{print.bm_pixmap()}}.}
+\item{bittermelon.fg}{Set new default \code{fg} argument value for
 \code{\link[=format.bm_bitmap]{format.bm_bitmap()}} and \code{\link[=print.bm_bitmap]{print.bm_bitmap()}}.}
 \item{bittermelon.monobit_path}{Set new default \code{monobit_path} argument value
 for \code{\link[=read_monobit]{read_monobit()}} and \code{\link[=write_monobit]{write_monobit()}}.}
+\item{bittermelon.px}{Set new default \code{px} argument value for
+\code{\link[=format.bm_bitmap]{format.bm_bitmap()}} and \code{\link[=print.bm_bitmap]{print.bm_bitmap()}}.
+If unset both functions default to \code{\link[=px_auto]{px_auto()}}.}
 }
-The following \code{findpython} option may also be of interest:
+The following \code{cli} options may also be of interest:
 \describe{
-\item{python_cmd}{Explicitly set path to python binary to use with \code{\link[=read_monobit]{read_monobit()}}
-or \code{\link[=write_monobit]{write_monobit()}}.  This is actually the appropriate global option
-for \code{\link[findpython:find_python_cmd]{findpython::find_python_cmd()}}.}
+\item{cli.num_colors}{See \code{\link[cli:num_ansi_colors]{cli::num_ansi_colors()}}.
+If set to \code{1L} then the \code{cli} package won't add any ANSI sequences.}
+\item{cli.unicode}{Whether UTF-8 character support should be assumed.
+Used by \code{\link[=px_auto]{px_auto()}} which is the default of the \code{bittermelon.px} option.}
 }
 }
 
@@ -44,12 +51,13 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Trevor L Davis \email{trevor.l.davis@gmail.com} (\href{https://orcid.org/0000-0001-6341-4639}{ORCID})
+\strong{Maintainer}: Trevor L. Davis \email{trevor.l.davis@gmail.com} (\href{https://orcid.org/0000-0001-6341-4639}{ORCID})
 
 Other contributors:
 \itemize{
-  \item Rob Hagemans (Author of included 'monobit' library) [copyright holder]
-  \item Frederic Cambus (Author of included 'Spleen' font) [copyright holder]
+  \item Frederic Cambus (Developer of included 'Spleen' font) [typographer]
+  \item Markus Kuhn (Maintainer of included 'Fixed' font) [typographer]
+  \item josehzz (Artist of included 'Farming Crops 16x16' sprites) [artist]
 }
 
 }

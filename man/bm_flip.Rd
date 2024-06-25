@@ -2,37 +2,76 @@
 % Please edit documentation in R/bm_flip.R
 \name{bm_flip}
 \alias{bm_flip}
+\alias{bm_flip.bm_bitmap}
+\alias{bm_flip.bm_list}
+\alias{bm_flip.bm_pixmap}
+\alias{bm_flip.magick-image}
+\alias{bm_flip.nativeRaster}
+\alias{bm_flip.raster}
 \title{Flip (reflect) bitmaps}
 \usage{
-bm_flip(bm_object, direction = "vertical", in_place = FALSE)
+bm_flip(x, direction = "vertical", in_place = FALSE, value)
+
+\method{bm_flip}{bm_bitmap}(x, direction = "vertical", in_place = FALSE, value = 0L)
+
+\method{bm_flip}{bm_list}(x, ...)
+
+\method{bm_flip}{bm_pixmap}(
+  x,
+  direction = "vertical",
+  in_place = FALSE,
+  value = col2hex("transparent")
+)
+
+\method{bm_flip}{`magick-image`}(x, direction = "vertical", in_place = FALSE, value = "transparent")
+
+\method{bm_flip}{nativeRaster}(
+  x,
+  direction = "vertical",
+  in_place = FALSE,
+  value = col2int("transparent")
+)
+
+\method{bm_flip}{raster}(x, direction = "vertical", in_place = FALSE, value = "transparent")
 }
 \arguments{
-\item{bm_object}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}},  or \code{\link[=bm_font]{bm_font()}} object.}
+\item{x}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{"magick-image"}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{"raster"}  object.}
 
 \item{direction}{Either "vertical" or "v", "horizontal" or "h",
 OR "both" or "b".}
 
-\item{in_place}{If \code{TRUE} flip the glyphs in place (without changing any white space padding).}
+\item{in_place}{If \code{TRUE} flip the glyphs in place (without changing any background padding).}
+
+\item{value}{Background padding value (to use if \code{in_place} is \code{TRUE})}
+
+\item{...}{Additional arguments to be passed to or from methods.}
 }
 \value{
-Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}}, or \code{\link[=bm_font]{bm_font()}} object.
+Depending on \code{x} either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{magick-image}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{raster}  object.
 }
 \description{
 \code{bm_flip()} flips (reflects) bitmaps horizontally, vertically, or both.
 It can flip the entire bitmap or just the glyph in place.
 }
 \examples{
-  font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
-  font <- read_hex(font_file)
+font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+font <- read_hex(font_file)
 
-  # Print upside down
-  bml <- as_bm_list("RSTATS", font = font)
-  bml <- bm_flip(bml, "both")
-  bm <- bm_call(bml, cbind, direction = "RTL")
-  print(bm, px = px_ascii)
+# Print upside down
+bml <- as_bm_list("RSTATS", font = font)
+bml <- bm_flip(bml, "both")
+bm <- bm_call(bml, cbind, direction = "RTL")
+print(bm)
 
-  # Can also modify glyphs "in place"
-  exclamation <- font[[str2ucp("!")]]
-  exclamation_flipped <- bm_flip(exclamation, in_place = TRUE)
-  print(exclamation_flipped, px = px_ascii)
+# Can also modify glyphs "in place"
+exclamation <- font[[str2ucp("!")]]
+exclamation_flipped <- bm_flip(exclamation, in_place = TRUE)
+print(exclamation_flipped)
+
+crops <- farming_crops_16x16()
+corn <- crops$corn$portrait
+corn_fh <- bm_flip(corn, "h")
+if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L) {
+  print(corn_fh, compress = "v")
+}
 }

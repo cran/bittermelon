@@ -2,36 +2,58 @@
 % Please edit documentation in R/bm_rotate.R
 \name{bm_rotate}
 \alias{bm_rotate}
+\alias{bm_rotate.bm_matrix}
+\alias{bm_rotate.nativeRaster}
+\alias{bm_rotate.magick-image}
+\alias{bm_rotate.raster}
+\alias{bm_rotate.bm_list}
 \title{Rotate bitmaps 0, 90, 180, or 270 degrees}
 \usage{
-bm_rotate(bm_object, angle = 0, clockwise = TRUE)
+bm_rotate(x, angle = 0L, clockwise = TRUE)
+
+\method{bm_rotate}{bm_matrix}(x, angle = 0L, clockwise = TRUE)
+
+\method{bm_rotate}{nativeRaster}(x, angle = 0L, clockwise = TRUE)
+
+\method{bm_rotate}{`magick-image`}(x, angle = 0L, clockwise = TRUE)
+
+\method{bm_rotate}{raster}(x, angle = 0L, clockwise = TRUE)
+
+\method{bm_rotate}{bm_list}(x, ...)
 }
 \arguments{
-\item{bm_object}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}},  or \code{\link[=bm_font]{bm_font()}} object.}
+\item{x}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{"magick-image"}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{"raster"}  object.}
 
 \item{angle}{Angle to rotate bitmap by.}
 
 \item{clockwise}{If \code{TRUE} rotate bitmaps clockwise.
 Note Unicode's convention is to rotate glyphs clockwise
 i.e. the top of the "BLACK CHESS PAWN ROTATED NINETY DEGREES" glyph points right.}
+
+\item{...}{Additional arguments to be passed to or from methods.}
 }
 \value{
-Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}}, or \code{\link[=bm_font]{bm_font()}} object.
+Depending on \code{x} either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{magick-image}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{raster}  object.
 }
 \description{
 \code{bm_rotate()} losslessly rotates bitmaps by 0, 90, 180, or 270 degrees.
 If \code{90} or \code{270} degrees are indicated the width and height of the bitmap will be flipped.
 }
 \examples{
-  # as_bm_list.character()
-  font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
-  font <- read_hex(font_file)
-  capital_r <- font[[str2ucp("R")]]
-  print(bm_rotate(capital_r, 90), px = px_ascii)
-  print(bm_rotate(capital_r, 180), px = px_ascii)
-  print(bm_rotate(capital_r, 270), px = px_ascii)
-  print(bm_rotate(capital_r, 90, clockwise = FALSE), px = px_ascii)
+# as_bm_list.character()
+font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+font <- read_hex(font_file)
+capital_r <- font[[str2ucp("R")]]
+print(bm_rotate(capital_r, 90))
+print(bm_rotate(capital_r, 180))
+print(bm_rotate(capital_r, 270))
+print(bm_rotate(capital_r, 90, clockwise = FALSE))
 
+corn <- farming_crops_16x16()$corn$portrait
+corn_180 <- bm_rotate(corn, 180)
+if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L) {
+  print(corn_180, compress = "v")
+}
 }
 \seealso{
 \code{\link[=bm_distort]{bm_distort()}} can do other (distorted) rotations by careful

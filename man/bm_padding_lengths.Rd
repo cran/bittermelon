@@ -2,19 +2,39 @@
 % Please edit documentation in R/bm_padding_lengths.R
 \name{bm_padding_lengths}
 \alias{bm_padding_lengths}
+\alias{bm_padding_lengths.bm_bitmap}
+\alias{bm_padding_lengths.bm_list}
+\alias{bm_padding_lengths.bm_pixmap}
+\alias{bm_padding_lengths.magick-image}
+\alias{bm_padding_lengths.nativeRaster}
+\alias{bm_padding_lengths.raster}
 \title{Compute bitmap padding lengths}
 \usage{
-bm_padding_lengths(bm_object, value = 0L)
+bm_padding_lengths(x, value)
+
+\method{bm_padding_lengths}{bm_bitmap}(x, value = 0L)
+
+\method{bm_padding_lengths}{bm_list}(x, ...)
+
+\method{bm_padding_lengths}{bm_pixmap}(x, value = col2hex("transparent"))
+
+\method{bm_padding_lengths}{`magick-image`}(x, value = "transparent")
+
+\method{bm_padding_lengths}{nativeRaster}(x, value = col2int("transparent"))
+
+\method{bm_padding_lengths}{raster}(x, value = "transparent")
 }
 \arguments{
-\item{bm_object}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_list]{bm_list()}},  or \code{\link[=bm_font]{bm_font()}} object.}
+\item{x}{Either a \code{\link[=bm_bitmap]{bm_bitmap()}}, \code{\link[=bm_font]{bm_font()}}, \code{\link[=bm_list]{bm_list()}}, \link[magick:editing]{"magick-image"}, "nativeRaster", \code{\link[=bm_pixmap]{bm_pixmap()}}, or \link[grDevices:as.raster]{"raster"}  object.}
 
-\item{value}{The value of the \dQuote{padding} integer to compute lengths for.}
+\item{value}{The value of the \dQuote{padding} element to compute lengths for.}
+
+\item{...}{Additional arguments to be passed to or from methods.}
 }
 \value{
-If \code{bm_object} is a \code{bm_bitmap()} object then a integer vector of length four
+If \code{x} is a \code{bm_bitmap()} object then a integer vector of length four
 representing the padding lengths for the top, right, bottom, and left sides respectively.
-If \code{bm_object} is a \code{bm_list()} or \code{bm_font()} then a list of integer vectors of length four.
+If \code{x} is a \code{bm_list()} or \code{bm_font()} then a list of integer vectors of length four.
 }
 \description{
 \code{bm_padding_lengths()} computes the padding lengths of a
@@ -23,10 +43,15 @@ If the entire bitmap is of the target value then the left/right and top/bottom
 will simply split the width/height in half.
 }
 \examples{
- font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
- font <- read_hex(font_file)
- # add a border to an "R"
- capital_r <- font[[str2ucp("R")]]
- print(capital_r, px = c(".", "@"))
- print(bm_padding_lengths(capital_r))
+font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+font <- read_hex(font_file)
+# add a border to an "R"
+capital_r <- font[[str2ucp("R")]]
+print(capital_r)
+print(bm_padding_lengths(capital_r))
+corn <- farming_crops_16x16()$corn$portrait
+if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L) {
+  print(corn, bg = "cyan", compress = "v")
+}
+print(bm_padding_lengths(corn))
 }

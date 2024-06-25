@@ -9,38 +9,77 @@
 #'                  Note Unicode's convention is to rotate glyphs clockwise
 #'                  i.e. the top of the "BLACK CHESS PAWN ROTATED NINETY DEGREES" glyph points right.
 #' @examples
-#'   # as_bm_list.character()
-#'   font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
-#'   font <- read_hex(font_file)
-#'   capital_r <- font[[str2ucp("R")]]
-#'   print(bm_rotate(capital_r, 90), px = px_ascii)
-#'   print(bm_rotate(capital_r, 180), px = px_ascii)
-#'   print(bm_rotate(capital_r, 270), px = px_ascii)
-#'   print(bm_rotate(capital_r, 90, clockwise = FALSE), px = px_ascii)
+#' # as_bm_list.character()
+#' font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+#' font <- read_hex(font_file)
+#' capital_r <- font[[str2ucp("R")]]
+#' print(bm_rotate(capital_r, 90))
+#' print(bm_rotate(capital_r, 180))
+#' print(bm_rotate(capital_r, 270))
+#' print(bm_rotate(capital_r, 90, clockwise = FALSE))
 #'
+#' corn <- farming_crops_16x16()$corn$portrait
+#' corn_180 <- bm_rotate(corn, 180)
+#' if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L) {
+#'   print(corn_180, compress = "v")
+#' }
 #' @seealso [bm_distort()] can do other (distorted) rotations by careful
 #'          use of its `vp` [grid::viewport()] argument.
 #'          [bm_flip()] with `direction` "both" and `in_place` `TRUE` can
 #'          rotate glyphs 180 degrees in place.
 #' @inherit bm_clamp return
 #' @export
-bm_rotate <- function(bm_object, angle = 0, clockwise = TRUE) {
-    modify_bm_bitmaps(bm_object, bm_rotate_bitmap,
-                      angle = angle, clockwise = clockwise)
+bm_rotate <- function(x, angle = 0L, clockwise = TRUE) {
+    UseMethod("bm_rotate")
 }
 
-bm_rotate_bitmap <- function(bitmap, angle = 0, clockwise = TRUE) {
+#' @rdname bm_rotate
+#' @export
+bm_rotate.bm_matrix <- function(x, angle = 0L, clockwise = TRUE) {
+    bm_rotate_bitmap(x, angle, clockwise)
+}
+
+#' @rdname bm_rotate
+#' @export
+bm_rotate.nativeRaster <- function(x, angle = 0L, clockwise = TRUE) {
+    pm <- as_bm_pixmap.nativeRaster(x)
+    pm <- bm_rotate_bitmap(pm, angle, clockwise)
+    as.raster(pm, native = TRUE)
+}
+
+#' @rdname bm_rotate
+#' @export
+`bm_rotate.magick-image` <- function(x, angle = 0L, clockwise = TRUE) {
+    stopifnot(requireNamespace("magick", quietly = TRUE))
+    if (!clockwise)
+        angle <- -angle
+    magick::image_rotate(x, angle)
+}
+
+#' @rdname bm_rotate
+#' @export
+bm_rotate.raster <- function(x, angle = 0L, clockwise = TRUE) {
+    as.raster(bm_rotate_bitmap(x, angle, !clockwise))
+}
+
+#' @rdname bm_rotate
+#' @export
+bm_rotate.bm_list <- function(x, ...) {
+    bm_lapply(x, bm_rotate, ...)
+}
+
+bm_rotate_bitmap <- function(x, angle = 0, clockwise = TRUE) {
     angle <- as.integer(angle)
     if (clockwise)
         angle <- -angle
     angle <- angle %% 360L
     stopifnot(angle %in% c(0L, 90L, 180L, 270L))
     if (angle == 90L) {
-        bitmap <- bm_flip(t(bitmap), direction = "horizontal")
+        x <- flip_matrix_horizontally(t(x))
     } else if (angle == 180L) {
-        bitmap <- bm_flip(bitmap, direction = "both")
+        x <- flip_matrix_horizontally(flip_matrix_vertically(x))
     } else if (angle == 270L) {
-        bitmap <- bm_flip(t(bitmap), direction = "vertical")
+        x <- flip_matrix_vertically(t(x))
     } # No change if angle == 0L
-    bitmap
+    x
 }

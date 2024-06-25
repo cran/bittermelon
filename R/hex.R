@@ -13,14 +13,14 @@
 #'  font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
 #'  font <- read_hex(font_file)
 #'  capital_r <- font[[str2ucp("R")]]
-#'  print(capital_r, px = px_ascii)
+#'  print(capital_r)
 #'
 #'  filename <- tempfile(fileext = ".hex.gz")
 #'  write_hex(font, gzfile(filename))
 #'
 #'  font <- read_hex(font_file, ucp = block2ucp("Basic Latin"))
 #'  capital_r <- font[[str2ucp("R")]]
-#'  print(capital_r, px = px_ascii)
+#'  print(capital_r)
 #' @export
 #' @rdname hex_font
 #' @return `read_hex()` returns a [bm_font()] object.
@@ -107,7 +107,7 @@ as_bm_bitmap_hex <- function(hex_string) {
         m <- matrix(0L, nrow = 16L, ncol = 16L)
     }
     hex_string <- tolower(hex_string)
-    for (i in seq.int(16)) {
+    for (i in seq_len(16L)) {
         stop <- n_hex - (i - 1L) * n_i
         start <- stop - n_i + 1L
         hex_substring <- substr(hex_string, start, stop)
@@ -121,7 +121,7 @@ as_hex <- function(glyph) {
     val <- ""
     # we're going to work from bottom-to-top, right-to-left
     for (i in seq_len(nrow(glyph))) {
-        for (j in rev(seq_len(ncol(glyph) / 4L))) {
+        for (j in seq.int(ncol(glyph) / 4L, 1L, -1L)) {
             j_indices <- seq.int(4L * (j - 1L) + 1L, length.out = 4L)
             binary <- paste(format(glyph[i, j_indices]), collapse = "")
             hex <- binary_to_hex(binary)

@@ -9,6 +9,12 @@
 * [Overview](#overview)
 * [Installation](#installation)
 * [Examples](#examples)
+
+  - [Bitmap font glyphs](#ex-glyphs)
+  - [{gridpattern} matrices](#ex-gridpattern)
+  - [{mazing} mazes](#ex-mazes)
+  - [Sprites](#ex-sprites)
+
 * [Builtin Fonts](#fonts)
 * [GNU Unifont via {hexfont}](#hexfont)
 * [Game Bit](#gamebit)
@@ -18,38 +24,31 @@
 
 ## <a name="overview">Overview</a>
 
-`{bittermelon}` provides functions for creating and modifying bitmaps with special emphasis on bitmap fonts and their glyphs.  It provides native read/write support for the 'hex' and 'yaff' bitmap font formats and if 'Python' is installed can also read/write several more bitmap font formats using an embedded version of [monobit](https://github.com/robhagemans/monobit).  It features [over a dozen functions](https://trevorldavis.com/R/bittermelon/dev/reference/index.html#section-modify-bitmaps) that can modify individual bitmaps or every bitmap within a "bitmap list" or "bitmap font".  `{bittermelon}` can also pretty print bitmaps to the terminal and has a basic plot method.
+* `{bittermelon}` features [over a dozen functions](https://trevorldavis.com/R/bittermelon/dev/reference/index.html#modify-bitmaps-and-pixmaps) that can modify individual bitmaps or every bitmap within a "bitmap list" or "bitmap font".
+* There is a special emphasis on bitmap fonts and their glyphs.  It provides native read/write support for the 'hex' and 'yaff' bitmap font formats and if [monobit](https://github.com/robhagemans/monobit) is also installed then it can read/write [several more bitmap font formats](https://github.com/robhagemans/monobit?tab=readme-ov-file#supported-bitmap-formats).
+* It can print bitmaps to the R terminal.
+* Besides supporting the builtin `bm_bitmap()` and `bm_pixmap()` objects it also supports modifying `{magick}`'s "magick-image" objects and base R's "nativeRaster" and "raster" objects.
 
 ## <a name="installation">Installation</a>
 
 
-```r
+``` r
 remotes::install_github("trevorld/bittermelon")
 ```
 
-The functions `read_monobit()` and `write_monobit()` that use the embedded version of [monobit](https://github.com/robhagemans/monobit) require that Python is available on the system.  A couple of the bitmap font output formats supported by `write_monobit()` also require that the "Pillow" or "reportlab" Python packages are installed (installable via `pip3`).
+* The functions `read_monobit()` and `write_monobit()` require that [monobit](https://github.com/robhagemans/monobit) is installed (i.e. `pip3 install monobit`).
+* The function `bm_distort()` requires the suggested package [magick](https://github.com/ropensci/magick).
+* Support for "nativeRaster" objects requires the suggested package [farver](https://github.com/thomasp85/farver).
 
 ## <a name="examples">Examples</a>
 
 
 
+### <a name="ex-glyphs">Bitmap font glyphs</a>
 
-```r
+
+``` r
 library("bittermelon") # remotes::install_github("trevorld/bittermelon")
-```
-
-```
-
-Attaching package: 'bittermelon'
-```
-
-```
-The following object is masked from 'package:base':
-
-    which
-```
-
-```r
 font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
 font <- read_hex(font_file)
 bml <- as_bm_list("RSTATS", font = font)
@@ -58,7 +57,7 @@ bm <- bml |> bm_call(cbind) |> bm_compress("vertical")
 print(bm)
 ```
 
-```{.bitmap}
+``` bitmap
                                                 
 ██▀▀▀█▄ ▄█▀▀▀▀▀ ▀▀▀██▀▀▀▄█▀▀▀█▄ ▀▀▀██▀▀▀▄█▀▀▀▀▀ 
 ██   ██ ██         ██   ██   ██    ██   ██      
@@ -69,15 +68,15 @@ print(bm)
                                                 
 ```
 
-```r
+``` r
 # Upside down with ASCII characters
-bm <- bml |> 
-    bm_flip("both") |> 
+bm <- bml |>
+    bm_flip("both") |>
     bm_call(cbind, direction = "RTL")
 print(bm, px = px_ascii)
 ```
 
-```{.bitmap}
+``` bitmap
 ------------------------------------------------
 ------------------------------------------------
 ------------------------------------------------
@@ -96,18 +95,18 @@ print(bm, px = px_ascii)
 ------------------------------------------------
 ```
 
-```r
+``` r
 # With a shadow effect and borders
-bm <- bml |> 
+bm <- bml |>
     bm_pad(sides = 2L) |>
     bm_shadow() |>
     bm_extend(sides = c(2L, 1L), value = 3L) |>
-    bm_call(cbind) |> 
+    bm_call(cbind) |>
     bm_pad(sides = 2L, value = 3L)
 print(bm)
 ```
 
-```{.bitmap}
+``` bitmap
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 ▓▓░░░░░░░░░░░░▓▓░░░░░░░░░░░░▓▓░░░░░░░░░░░░░▓▓░░░░░░░░░░░░▓▓░░░░░░░░░░░░░▓▓░░░░░░░░░░░░▓▓
@@ -129,36 +128,148 @@ print(bm)
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 ```
 
-```r
-# Can also print colored terminal output via suggested package {crayon}
-if (crayon::has_color())
-    print(bm, px = " ", bg = c("white", "black", "grey", "red"))
+We can also print colored terminal output with help of `{cli}`:
+
+
+``` r
+if (cli::num_ansi_colors() >= 16L)
+    print(bm, px = " ",
+          bg = c(cli::bg_br_white, cli::bg_blue, cli::bg_cyan, cli::bg_red))
 ```
 
-```r
-plot(bm, col = c("white", "darkblue", "lightblue", "black"))
+``` r
+plot(bm, col = c("white", "blue3", "cyan3", "red3"))
 ```
 
-![](man/figures/README-plot-1.png)
+<img src="man/figures/README-plot-1.png" alt="Stylized bitmap image that says 'RSTATS`."  />
+
+### <a name="ex-gridpattern">{gridpattern} matrices</a>
+
+
+``` r
+# Also supports {gridpattern} matrices
+gridpattern::pattern_weave("twill_herringbone", nrow=14L, ncol = 50L) |>
+    as_bm_bitmap() |>
+    print(compress = "vertical")
+```
+
+``` bitmap
+ █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  
+  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█ 
+█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█
+▀▀▄▄▀▄▄▀▀▄▄▀▄▄▀▀▄▄▀▄▄▀▀▄▄▀▄▄▀▀▄▄▀▄▄▀▀▄▄▀▄▄▀▀▄▄▀▄▄▀
+ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ 
+██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ █
+█ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██
+```
+
+
+``` r
+gridpattern::pattern_square(subtype=8L, nrow=8L, ncol = 50L) |>
+    as_bm_pixmap(s, col = grDevices::rainbow(8L)) |>
+    plot()
+```
+
+<img src="man/figures/README-plot_gridpattern-1.png" alt="Rainbow squares"  />
+
+### <a name="ex-mazes">{mazing} mazes</a>
+
+
+``` r
+# Also supports {mazing} mazes
+set.seed(42)
+m <- mazing::maze(16L, 32L)
+m |> as_bm_bitmap(walls = TRUE) |>
+    print(compress = "vertical")
+```
+
+``` bitmap
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█▀▀▀█▀▀▀▀▀█▀▀▀▀▀▀▀▀▀▀▀█▀▀▀▀▀█▀▀▀▀▀▀▀█▀▀▀▀▀▀▀█▀▀▀█ 
+█ █▀▀▀▀▀▀▀▀▀█ ▀▀▀ █ ▀ █ █ █ █ ▀▀█▀▀▀▀ ▀ █▀▀ █ █▀▀ █ ▀ █▀▀▀█ █ █ █ 
+█ █ ▀▀▀▀█▀▀ ▀▀▀▀█▀█▀▀▀▀ █ █ █▀▀ █▀▀▀█▀█▀▀ █▀▀▀▀ █▀▀▀▀▀█ ▀▀▀ █ █ █ 
+█ █▀▀ █▀▀ █▀▀▀▀ █ █ ▀▀█▀█ ▀▀█ █▀▀ █ █ ▀ ▀▀▀ █▀▀▀▀▀▀▀▀ █ ▀▀█▀▀▀▀ █ 
+█ ▀▀▀▀█ █▀█ █▀▀▀▀ █▀▀ █ █▀▀ █ █ █▀█ ▀▀█▀▀▀▀▀█ █▀█ ▀▀▀▀▀▀▀ █ █ ▀▀█ 
+█▀▀▀▀ █ █ ▀ █ █▀█ █ █▀▀ █ █▀▀ █ ▀ ▀▀█ █ █ ▀▀█ █ ▀▀▀▀▀▀█▀▀▀▀ ▀▀█ █ 
+█ █▀▀▀▀ █ ▀▀█ █ ▀ █ █▀▀ █ █ █ ▀▀▀ █▀▀ █ █▀▀ █ ▀ █▀▀▀█ █▀▀▀▀▀▀▀█ █ 
+█ ▀ █▀█▀▀▀▀ █ ▀▀▀▀█ █ █ █ ▀▀▀▀█ ▀▀█ ▀▀▀▀█ ▀▀▀▀▀▀▀ █ █ ▀ █▀▀▀█ ▀ █ 
+█▀▀▀▀ █ █▀▀▀▀ ▀▀█ █ █ ▀▀▀▀▀▀█ █ █▀▀▀█▀▀ █ █▀▀▀▀ █▀▀▀█▀▀▀█ █ ▀▀█ █ 
+█ ▀▀█ ▀ █ ▀▀█▀▀▀▀ █ ▀▀█ █ ▀▀▀ █ █ █ █ ▀▀█ █ █ █▀▀ █ ▀ █ ▀ ▀▀█ █ █ 
+█▀▀ ▀▀▀▀▀▀█▀▀ █▀▀ █▀▀ █ █▀▀▀█ ▀▀▀ █ ▀▀▀ █▀▀ █▀▀ █▀▀▀█▀▀▀▀▀▀▀▀ █ █ 
+█ █▀▀▀▀▀█ ▀ █▀▀ ▀▀█ ▀▀▀▀▀ █ █▀█▀▀▀▀▀▀▀▀▀▀ ▀▀█ █▀▀ █▀▀ █▀▀▀█ █▀▀ █ 
+█ █ ▀▀█ █▀▀▀▀▀▀▀█ █▀▀▀▀▀█▀█ █ ▀ █▀▀▀█▀▀▀▀▀█ ▀ █▀▀ █ █▀▀ █ ▀▀█ █▀█ 
+█ █▀█ █ ▀ █▀▀▀█ █ ▀▀█ █ ▀ █ █ ▀▀█ ▀▀▀ █ ▀▀▀▀▀▀▀ █ █ ▀ █▀▀▀█ █ █ █ 
+█ █ █ █▀▀▀▀ █ █ ▀▀█ ▀ █ █▀▀ █▀█ █▀▀▀█ █▀▀ █▀▀▀█▀▀ █▀▀▀▀▀▀ █ ▀ █ █ 
+█ ▀ █ ▀▀▀▀█ ▀▀▀▀▀ ▀▀▀▀▀▀▀ █▀▀ ▀ ▀ █ ▀▀▀ █▀▀ ▀▀▀ ▀▀▀▀▀▀▀ █ ▀▀▀▀▀ █ 
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ 
+```
+
+``` r
+# Can also visualize the maze solutions
+pal <- grDevices::palette.colors()
+m |> as_bm_pixmap(start = "top", end = "bottom",
+                  col = c(pal[6L], "white", pal[7L], pal[5L])) |>
+   bm_pad(sides = 1L) |>
+   plot()
+```
+
+<img src="man/figures/README-plot_maze-1.png" alt="A maze"  />
+
+### <a name="ex-sprites">Sprites</a>
+
+
+``` r
+# Contains some built-in farming crops sprites
+crops <- farming_crops_16x16()
+names(crops)
+```
+
+``` bitmap
+ [1] "avocado"    "cassava"    "coffee"     "corn"       "cucumber"  
+ [6] "eggplant"   "grapes"     "lemon"      "melon"      "orange"    
+[11] "pineapple"  "potato"     "rice"       "rose"       "strawberry"
+[16] "sunflower"  "tomato"     "tulip"      "turnip"     "wheat"     
+```
+
+``` r
+corn <- crops$corn$portrait
+grapes <- crops$grapes$portrait
+orange <- crops$orange$stage5
+tulip <- crops$tulip$portrait
+pm <- cbind(corn, grapes, orange, tulip)
+```
+
+We can pretty print sprites to the terminal with help of `{cli}`:
+
+
+``` r
+if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L)
+    print(pm, compress = "v", bg = "white")
+```
+
+``` r
+plot(pm)
+```
+
+<img src="man/figures/README-plot_sprites-1.png" alt="Sprites of some food crops"  />
 
 ## <a name="fonts">Builtin Fonts</a>
 
 `{bittermelon}` has a builtin versions of the 8x16 [Spleen](https://github.com/fcambus/spleen) font as well as 4x6 and 6x13 [Fixed](https://www.cl.cam.ac.uk/~mgk25/ucs-fonts.html) fonts.
 
 
-```r
+``` r
 spleen_8x16 <- read_hex(system.file("fonts/spleen/spleen-8x16.hex.gz",
                                     package = "bittermelon"))
-fixed_4x6 <- read_yaff(system.file("fonts/fixed/4x6.yaff.gz", 
+fixed_4x6 <- read_yaff(system.file("fonts/fixed/4x6.yaff.gz",
                                    package = "bittermelon"))
-fixed_5x8 <- read_yaff(system.file("fonts/fixed/5x8.yaff.gz", 
+fixed_5x8 <- read_yaff(system.file("fonts/fixed/5x8.yaff.gz",
                                    package = "bittermelon"))
-fixed_6x13 <- read_yaff(system.file("fonts/fixed/6x13.yaff.gz", 
+fixed_6x13 <- read_yaff(system.file("fonts/fixed/6x13.yaff.gz",
                                     package = "bittermelon"))
 as_bm_bitmap("RSTATS", font = spleen_8x16) |> bm_compress("v")
 ```
 
-```{.bitmap}
+``` bitmap
                                                 
 ██▀▀▀█▄ ▄█▀▀▀▀▀ ▀▀▀██▀▀▀▄█▀▀▀█▄ ▀▀▀██▀▀▀▄█▀▀▀▀▀ 
 ██   ██ ██         ██   ██   ██    ██   ██      
@@ -169,32 +280,32 @@ as_bm_bitmap("RSTATS", font = spleen_8x16) |> bm_compress("v")
                                                 
 ```
 
-```r
+``` r
 as_bm_bitmap("RSTATS", font = fixed_4x6) |> bm_compress("v")
 ```
 
-```{.bitmap}
+``` bitmap
 █▀▄ ▄▀▀ ▀█▀ ▄▀▄ ▀█▀ ▄▀▀ 
 █▀▄  ▀▄  █  █▀█  █   ▀▄ 
 ▀ ▀ ▀▀   ▀  ▀ ▀  ▀  ▀▀  
 ```
 
-```r
+``` r
 as_bm_bitmap("RSTATS", font = fixed_5x8) |> bm_compress("v")
 ```
 
-```{.bitmap}
+``` bitmap
 ▄▄▄   ▄▄   ▄▄▄  ▄▄   ▄▄▄  ▄▄  
 █  █ ▀▄ ▀   █  █  █   █  ▀▄ ▀ 
 █▀▀▄ ▄ ▀▄   █  █▀▀█   █  ▄ ▀▄ 
 ▀  ▀  ▀▀    ▀  ▀  ▀   ▀   ▀▀  
 ```
 
-```r
+``` r
 as_bm_bitmap("RSTATS", font = fixed_6x13) |> bm_compress("v")
 ```
 
-```{.bitmap}
+``` bitmap
                                     
 █▀▀▀▄ ▄▀▀▀▄ ▀▀█▀▀  ▄▀▄  ▀▀█▀▀ ▄▀▀▀▄ 
 █   █ █       █   █   █   █   █     
@@ -210,54 +321,76 @@ The [{hexfont}](https://github.com/trevorld/hexfont) package includes a helper f
 
 
 
-```r
-library("hexfont") # remotes::install_github("trevorld/hexfont")
+``` r
+library("hexfont")
 system.time(font <- unifont()) # Unifont is a **big** font
 ```
 
-```{.bitmap}
+``` bitmap
    user  system elapsed 
- 60.958   0.072  61.036 
+152.565   0.027 152.621 
 ```
 
-```r
+``` r
 length(font) |> prettyNum(big.mark = ",") # number of glyphs
 ```
 
-```{.bitmap}
-[1] "77,418"
+``` bitmap
+[1] "123,234"
 ```
 
-```r
+``` r
 object.size(font) |> format(units = "MB") # memory used
 ```
 
-```{.bitmap}
-[1] "116 Mb"
+``` bitmap
+[1] "196.5 Mb"
 ```
 
-```r
+``` r
+# Faster to load from a cache
+saveRDS(font, "unifont.rds")
+system.time(font <- readRDS("unifont.rds"))
+```
+
+``` bitmap
+   user  system elapsed 
+  0.497   0.004   0.501 
+```
+
+``` r
+# Or just load the subset of GNU Unifont you need
+s <- "Ｒ很棒！"
+system.time(font_s <- unifont(ucp = str2ucp(s)))
+```
+
+``` bitmap
+   user  system elapsed 
+  0.725   0.000   0.725 
+```
+
+``` r
 # Mandarin Chinese
-as_bm_bitmap("Ｒ很棒！", font = font) |> bm_compress("v")
+as_bm_bitmap(s, font = font_s) |> bm_compress("v")
 ```
 
-```{.bitmap}
+``` bitmap
                     █ ▄▄▄▄▄▄▄      █      █                     
-                  ▄▀  █     █      █  ▀▀▀▀█▀▀▀▀                 
-  ██▀▀▀▀▀▀▀▀▄▄   ▀  █ █▀▀▀▀▀█   ▀▀▀█▀▀ ▀▀█▀▀▀▀         ██       
-  ██        ██    ▄█  █▄▄▄▄▄█     ██▄ ▀▀█▀▀▀█▀▀        ██       
-  ██▀▀▀▀██▀▀    ▄▀ █  █  █  ▄▀   █ █ ▀▄▀  █  ▀▄        ██       
-  ██      ██       █  █   █▀    ▀  █    ▀▀█▀▀          ▀▀       
-  ██        ██     █  █ ▄  ▀▄      █  ▀▀▀▀█▀▀▀▀        ██       
+   ▄▄▄▄▄▄▄        ▄▀  █     █      █  ▀▀▀▀█▀▀▀▀      ▄█▄        
+    █     ▀▄     ▀  █ █▀▀▀▀▀█   ▀▀▀█▀▀ ▀▀█▀▀▀▀       ███        
+    █     ▄▀      ▄█  █▄▄▄▄▄█     ██▄ ▀▀█▀▀▀█▀▀      ▀█▀        
+    █▀▀▀█▀      ▄▀ █  █  █  ▄▀   █ █ ▀▄▀  █  ▀▄       █         
+    █    ▀▄        █  █   █▀    ▀  █    ▀▀█▀▀                   
+   ▄█▄    ▄█▄      █  █ ▄  ▀▄      █  ▀▀▀▀█▀▀▀▀       █         
                    █  █▀     ▀▀    █      █                     
 ```
 
-```r
+``` r
 # Emoji
 as_bm_bitmap("🐭🐲🐵", font = font) |> bm_compress("v")
 ```
 
-```{.bitmap}
+``` bitmap
   ▄▄       ▄▄           ▄▄▄            ▄▄       
 ▄▀  ▀▄▄▄▄▄▀  ▀▄       ▄█▀           ▄█▀██▀█▄    
 █    ▀   ▀    █      ▄████       ▄▀█ ▄▄  ▄▄ █▀▄ 
@@ -267,6 +400,26 @@ as_bm_bitmap("🐭🐲🐵", font = font) |> bm_compress("v")
     ▀▀▄▄▄▀▀        ▄███   ████▀     ▀▀▄▄▄▄▀▀    
                   ▀▀▀     ▀▀▀                   
 ```
+
+``` r
+# Klingon
+as_bm_list("", font = font) |>
+    bm_pad(type = "trim", left = 1L, right = 1L) |>
+    bm_call(cbind) |>
+    bm_compress("v")
+```
+
+``` bitmap
+                                                                              
+    ▄█▄ ▄▄██▀▀  ▀▀████████               ▄▀       ▄█▄    ▄█▀  ▀█▄    ▄▄       
+ ▄▄██████▀            ▀██ ▀            ▄█▀       ███▀▀  ███    ██   ▀████████ 
+  ▀██  ██             ▄███    ▄█      ▄██       ██▀      ▀██▄▄█▀      ██▀ ▀██ 
+   ▀    █▄           ███      ███▄▄▄▄▄██      ▄███        ▀███▀      ▄█▀   █▀ 
+         █▄          ▀█▄      ██▀▀▀▀▀▀███    ▄██████▄       ▀█▄     ▄█▀   █▀  
+          ▀▄           ▀▀▄   ▄▀        ▀█▄         ▀▀▄        ▀▀▄  ▄▀    ▀    
+                                                                              
+```
+
 
 ## <a name="gamebit">Game Bit</a>
 
@@ -278,15 +431,25 @@ I wrote `{bittermelon}` in order to help create [Game Bit](https://github.com/tr
 
 ### R packages
 
-* [bdftools](https://github.com/coolbutuseless/bdftools) provides some tools for reading and manipulating BDF bitmap fonts.  In particular provides much richer graphical output capabilities than `{bittermelon}` will likely support including a specialized `{ggplot2}` geom. 
+* [bdftools](https://github.com/coolbutuseless/bdftools) provides some tools for reading and manipulating BDF bitmap fonts.  In particular provides much richer graphical output capabilities than `{bittermelon}` will likely support including a specialized `{ggplot2}` geom.
+* [farver](https://github.com/thomasp85/farver) provides colour space manipulation.
+  Allows `{bittermelon}` to convert to/from "nativeRaster" objects.
 * [fontr](https://github.com/yixuan/fontr) allows one to extract character glyphs from a specific font (which itself may not be a bitmap font) as a bitmap.
-* [raster](https://rspatial.org/raster/pkg/index.html) has tools for manipulating "raster" objects with a focus on spatial applications.
+* [hexfont](https://github.com/trevorld/hexfont) provides [GNU Unifont](https://www.unifoundry.com/unifont/index.html) as `{bittermelon}` font objects.
+* [magick](https://github.com/ropensci/magick) bindings to ImageMagick.
+  Powers `{bittermelon}`'s `bm_distort()` method.
+* [mazing](https://github.com/kstreet13/mazing) generates mazes.
+* [nara](https://github.com/coolbutuseless/nara) "nativeRaster" tools.
+* [naratext](https://github.com/coolbutuseless/naratext) renders text to "nativeRaster" images im memory.  Its `nr_text_bitmap()` method works with `{bittermelon}` font objects.
+* [pixeltrix](https://github.com/matt-dray/pixeltrix) lets you make pixel art interactively
+  in a plot window.
 
 ### Python
 
 * [BDF Parser Python library](https://github.com/tomchen/bdfparser)
 * [bdflib](https://gitlab.com/Screwtapello/bdflib)
-* [monobit](https://github.com/robhagemans/monobit) lets one modify bitmap fonts and convert between several formats.  Embedded within `{bittermelon}`.
+* [monobit](https://github.com/robhagemans/monobit) lets one modify bitmap fonts and convert between several formats.
+  Provides `monobit-convert` which is used by `bittermelon::read_monobit()` and `bittermelon::write_monobit()`.
 
 ### Other
 
@@ -305,5 +468,5 @@ I wrote `{bittermelon}` in order to help create [Game Bit](https://github.com/tr
 * Embedded in `{bdftools}` package:
 
   * [Cozette](https://github.com/slavfox/Cozette)
-  * [Creep2](https://github.com/raymond-w-ko/creep2) 
+  * [Creep2](https://github.com/raymond-w-ko/creep2)
   * [Spleen](https://github.com/fcambus/spleen)

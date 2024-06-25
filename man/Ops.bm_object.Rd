@@ -2,82 +2,61 @@
 % Please edit documentation in R/Ops.bm_object.R
 \name{Ops.bm_bitmap}
 \alias{Ops.bm_bitmap}
+\alias{Ops.bm_pixmap}
 \alias{Ops.bm_list}
-\alias{which}
-\alias{which.default}
-\alias{which.bm_bitmap}
 \title{S3 Ops group generic methods for bitmap objects}
 \usage{
 \method{Ops}{bm_bitmap}(e1, e2)
 
+\method{Ops}{bm_pixmap}(e1, e2)
+
 \method{Ops}{bm_list}(e1, e2)
-
-which(x, arr.ind = FALSE, useNames = TRUE)
-
-\method{which}{default}(x, arr.ind = FALSE, useNames = TRUE)
-
-\method{which}{bm_bitmap}(x, arr.ind = FALSE, useNames = TRUE)
 }
 \arguments{
 \item{e1, e2}{objects.}
-
-\item{x}{a \code{\link[base]{logical}} vector or array.  \code{\link[base]{NA}}s
-   are allowed and omitted (treated as if \code{FALSE}).}
-
-\item{arr.ind}{logical; should \bold{arr}ay \bold{ind}ices be returned
-   when \code{x} is an array?  Anything other than a single true value
-   is treated as false.}
-
-\item{useNames}{logical indicating if the value of \code{arrayInd()}
-   should have (non-null) dimnames at all.}
 }
 \value{
-\code{which.bm_bitmap()} returns a logical vector.
-The various \code{Ops.bm_bitmap} methods return a \code{\link[=bm_bitmap]{bm_bitmap()}} object.
+The various \code{Ops.bm_bitmap} and \code{Ops.bm_pixmap} methods return a \code{\link[=bm_bitmap]{bm_bitmap()}} object.
 The various \code{Ops.bm_list} methods return a \code{\link[=bm_list]{bm_list()}} object.
 }
 \description{
 The S3 Ops group generic methods for \code{bm_bitmap()} objects
 are simply the result of the generic integer matrix method
-cast back to a binary \code{bm_bitmap()} object (which
-is an integer matrix of ones and zeros).
+cast back to a \code{bm_bitmap()} object (which is an integer matrix).
 The S3 Ops group generic methods for \code{bm_list()}
 and \code{bm_font()} objects simply returns another object
 with that operator applied to every bitmap in the original object.
-Since \code{\link[base:which]{base::which()}} does not automatically cast
-its argument to a logical value we also redefine it as a generic
-and besides a default method which simply calls \code{base:which()} we
-offer a \code{which.bm_bitmap()} method that first
-casts the bitmap to logical before calling \code{base::which()}.
 }
 \examples{
-  font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
-  font <- read_hex(font_file)
+font_file <- system.file("fonts/spleen/spleen-8x16.hex.gz", package = "bittermelon")
+font <- read_hex(font_file)
 
-  # Examples applied to individual bitmaps
-  capital_r <- font[[str2ucp("R")]]
-  print(!capital_r, px = px_ascii)
-  capital_b <- font[[str2ucp("B")]]
-  print(capital_r & capital_b, px = px_ascii)
-  print(capital_r | capital_b, px = px_ascii)
-  print(capital_r + 1L, px = px_ascii)
-  print(capital_r + 1L > 1L, px = px_ascii)
-  which(capital_r > 0L)
+# Examples applied to individual bitmaps
+capital_r <- font[[str2ucp("R")]]
+print(!capital_r)
+capital_b <- font[[str2ucp("B")]]
+print(capital_r & capital_b)
+print(capital_r | capital_b)
+print(capital_r + 1L)
+print(capital_r + 1L > 1L)
 
-  # Examples applied to `bm_list()` objects
-  bml <- font[c("U+0023", "U+0052", "U+0053", "U+0054", "U+0041", "U+0054", "U+0053")] # #RSTATS
-  bml <- as_bm_list(bml)
-  bm <- do.call(cbind, bml)
-  print(bm, px = px_ascii)
+# Examples applied to `bm_list()` objects
+bml <- font[c("U+0023", "U+0052", "U+0053", "U+0054", "U+0041", "U+0054", "U+0053")] # #RSTATS
+bml <- as_bm_list(bml)
+bm <- do.call(cbind, bml)
+print(bm)
 
-  bml <- !bml
-  bm <- do.call(cbind, bml)
-  print(bm, px = px_ascii)
+bml <- !bml
+bm <- do.call(cbind, bml)
+print(bm)
 
-  bml <- 2 * (bml + 1L)
-  bm <- do.call(cbind, bml)
-  print(bm, px = px_ascii)
+bml <- 2 * (bml + 1L)
+bm <- do.call(cbind, bml)
+print(bm)
 
+crops <- farming_crops_16x16()
+corn <- crops$corn$portrait
+print(corn == col2hex("transparent"))
 }
 \seealso{
 \link[base:groupGeneric]{base::Ops}

@@ -1,14 +1,10 @@
-#' Coerce to bitmap glyph objects
+#' Cast to a bitmap matrix object
 #'
 #' `as_bm_bitmap()` turns an existing object into a `bm_bitmap()` object.
 #'
 #' @param x An object that can reasonably be coerced to a `bm_bitmap()` object.
 #' @param ... Further arguments passed to or from other methods.
 #' @return A `bm_bitmap()` object.
-#' @examples
-#'  space_matrix <- matrix(0L, nrow = 16L, ncol = 16L)
-#'  space_glyph <- as_bm_bitmap(space_matrix)
-#'  is_bm_bitmap(space_glyph)
 #' @seealso [bm_bitmap()]
 #' @export
 as_bm_bitmap <- function(x, ...) {
@@ -17,19 +13,54 @@ as_bm_bitmap <- function(x, ...) {
 
 #' @rdname as_bm_bitmap
 #' @export
-as_bm_bitmap.matrix <- function(x, ...) {
-    if (!is.integer(x)) {
-        x[, ] <- suppressWarnings(as.integer(x))
+as_bm_bitmap.array <- function(x, ...,
+                               mode = c("alpha", "darkness", "brightness"),
+                               threshold = 0.5) {
+    # If no alpha channel then default to `mode <- "darkness"`
+    # One channel won't be dispatched by this so just worry about 3-channels
+    if (missing(mode) && dim(x)[3L] == 3L) { # RGB
+        mode <- "darkness"
+    } else {
+        mode <- match.arg(mode)
     }
-    stopifnot(!any(is.na(x)))
-    class(x) <- c("bm_bitmap", class(x))
-    x
+    if (dim(x)[3L] == 2L) { # GA
+        grey <- as.double(x[, , 1L])
+        alpha <- as.double(x[, , 2L])
+        m <- matrix(grDevices::rgb(grey, grey, grey, alpha = alpha),
+                    nrow = nrow(x), ncol = ncol(x))
+        as_bm_bitmap.bm_pixmap(as_bm_pixmap.matrix(flip_matrix_vertically(m)),
+                               mode = mode, threshold = threshold)
+    } else { # RGB or RGBA
+        as_bm_bitmap.bm_pixmap(as_bm_pixmap.raster(as.raster(x)),
+                               mode = mode, threshold = threshold)
+    }
 }
 
 #' @rdname as_bm_bitmap
 #' @export
 as_bm_bitmap.default <- function(x, ...) {
     as_bm_bitmap.matrix(as.matrix(x))
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.bm_bitmap <- function(x, ...) {
+    x
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.bm_pixmap <- function(x, ...,
+                                   mode = c("alpha", "darkness", "brightness"),
+                                   threshold = 0.5) {
+    mode <- match.arg(mode)
+    opaque <- switch(mode,
+                     alpha = hex2alpha(as.character(x)),
+                     darkness = hex2darkness(as.character(x)),
+                     brightness = hex2brightness(as.character(x))) >= threshold
+    m <- matrix(as.integer(opaque), nrow = nrow(x), ncol = ncol(x))
+    class(m) <- c("bm_bitmap", "bm_matrix", class(m))
+    m
 }
 
 #' @inheritParams as_bm_list
@@ -55,12 +86,40 @@ as_bm_bitmap.default <- function(x, ...) {
 #' @param compose Compose graphemes using [bm_compose()].
 #' @param pua_combining Passed to [bm_compose()].
 #' @examples
-#'   font_file <- system.file("fonts/fixed/4x6.yaff.gz", package = "bittermelon")
-#'   font <- read_yaff(font_file)
-#'   bm <- as_bm_bitmap("RSTATS", font = font)
-#'   print(bm, px = px_ascii)
-#'   bm <- as_bm_bitmap("RSTATS", direction = "top-to-bottom", font = font)
-#'   print(bm, px = px_ascii)
+#' space_matrix <- matrix(0L, nrow = 16L, ncol = 16L)
+#' space_glyph <- as_bm_bitmap(space_matrix)
+#' is_bm_bitmap(space_glyph)
+#'
+#' font_file <- system.file("fonts/fixed/4x6.yaff.gz", package = "bittermelon")
+#' font <- read_yaff(font_file)
+#' bm <- as_bm_bitmap("RSTATS", font = font)
+#' print(bm)
+#'
+#' bm <- as_bm_bitmap("RSTATS", direction = "top-to-bottom", font = font)
+#' print(bm)
+#'
+#' if (require("grid") && capabilities("png")) {
+#'   circle <- as_bm_bitmap(circleGrob(r = 0.25), width = 16L, height = 16L)
+#'   print(circle)
+#' }
+#'
+#' if (require("grid") && capabilities("png")) {
+#'   inverted_exclamation <- as_bm_bitmap(textGrob("!", rot = 180),
+#'                                        width = 8L, height = 16L)
+#'   print(inverted_exclamation)
+#' }
+#'
+#' if (requireNamespace("mazing", quietly = TRUE)) {
+#'   m <- mazing::maze(16, 32)
+#'   bm <- as_bm_bitmap(m, walls = TRUE)
+#'   print(bm, compress = "vertical")
+#' }
+#'
+#' if (requireNamespace("gridpattern", quietly = TRUE)) {
+#'   w <- gridpattern::pattern_weave("twill_herringbone", nrow=14L, ncol = 40L)
+#'   bm <- as_bm_bitmap(w)
+#'   print(bm, compress = "vertical")
+#' }
 #' @export
 as_bm_bitmap.character <- function(x, ...,
                                    direction = "left-to-right, top-to-bottom",
@@ -160,6 +219,14 @@ add_space <- function(bml, font) {
 }
 
 #' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.glyph_bitmap <- function(x, ..., threshold = 0.5) {
+    ints <- as.integer(as.integer(x) / 255 >= threshold)
+    m <- matrix(ints, nrow = nrow(x), ncol = ncol(x))
+    as_bm_bitmap.matrix(flip_matrix_vertically(m))
+}
+
+#' @rdname as_bm_bitmap
 #' @param width Desired width of bitmap
 #' @param height Desired height of bitmap
 #' @param png_device A function taking arguments `filename`, `width`, and `height`
@@ -167,23 +234,21 @@ add_space <- function(bml, font) {
 #'                   with a transparent background.  By default will use [ragg::agg_png()]
 #'                   if available else the \dQuote{cairo} version of [grDevices::png()]
 #'                   if available else just [grDevices::png()].
-#' @param threshold  If any png channel weakly exceeds this threshold
+#' @param mode Method to determine the integer values of the `bm_bitmap()` object:
+#'             \describe{
+#'             \item{alpha}{Higher alpha values get a `1L`.}
+#'             \item{darkness}{Higher darkness values get a `1L`.  `darkness = (1 - luma) * alpha`.}
+#'             \item{brightness}{Higher brightness values get a `1L`.  `brightness = luma * alpha`.}
+#'             }
+#' @param threshold  If the alpha/darkness/brightness value
+#'                   weakly exceeds this threshold
 #'                   (on an interval from zero to one)
 #'                   then the pixel is determined to be \dQuote{black}.
-#' @examples
-#'
-#'  if (require("grid") && capabilities("png")) {
-#'    circle <- as_bm_bitmap(circleGrob(r = 0.25), width = 16L, height = 16L)
-#'    print(circle, px = c(".", "@"))
-#'
-#'    inverted_exclamation <- as_bm_bitmap(textGrob("!", rot = 180),
-#'                                         width = 8L, height = 16L)
-#'    print(inverted_exclamation, px = c(".", "@"))
-#'  }
 #' @importFrom grid gpar grob grid.draw pushViewport popViewport viewport
 #' @export
 as_bm_bitmap.grob <- function(x, ..., width = 8L, height = 16L,
                               png_device = NULL, threshold = 0.25) {
+    stopifnot(width > 1L, height > 1L) # guarantee `m_bitmap` is a matrix
     current_dev <- grDevices::dev.cur()
     if (current_dev > 1L)
         on.exit(grDevices::dev.set(current_dev))
@@ -200,9 +265,8 @@ as_bm_bitmap.grob <- function(x, ..., width = 8L, height = 16L,
     popViewport()
     grDevices::dev.off()
 
-    array_glyph <- png::readPNG(png_file, native = FALSE)
-    m_bitmap <- apply(array_glyph, c(1, 2), function(x) as.integer(any(x >= threshold)))
-    bm_bitmap(m_bitmap[rev(seq.int(nrow(m_bitmap))), ])
+    a <- png::readPNG(png_file, native = FALSE)
+    as_bm_bitmap.array(a, threshold = threshold)
 }
 
 default_png_device <- function() {
@@ -217,4 +281,164 @@ default_png_device <- function() {
         function(filename, width, height)
             grDevices::png(filename, width, height, bg = "transparent")
     }
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+`as_bm_bitmap.magick-image` <- function(x, ...,
+                                        mode = c("alpha", "darkness", "brightness"),
+                                        threshold = 0.5) {
+    mode <- match.arg(mode)
+    as_bm_bitmap.bm_pixmap(`as_bm_pixmap.magick-image`(x),
+                           mode = mode, threshold = threshold)
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.matrix <- function(x, ...) {
+    if (!is.integer(x)) {
+        if (is.double(x))
+            x[, ] <- suppressWarnings(as.integer(round(x)))
+        else
+            x[, ] <- suppressWarnings(as.integer(x))
+    }
+    stopifnot(!any(is.na(x)))
+    class(x) <- c("bm_bitmap", "bm_matrix", class(x))
+    x
+}
+
+#' @rdname as_bm_bitmap
+#' @param walls If `TRUE` the values of 1L denote the walls and the values of 0L denote the paths.
+#' @param start,end If not `NULL` mark the `start` and `end` as value 2L.
+#'                  See [mazing::find_maze_refpoint()].
+#' @param solve If `TRUE` then mark the solution path from `start` to `end` as value 3L.
+#'              See [mazing::solve_maze()].
+#' @export
+as_bm_bitmap.maze <- function(x, ..., walls = FALSE, start = NULL, end = NULL,
+                              solve = !is.null(start) && !is.null(end)) {
+    stopifnot(requireNamespace("mazing", quietly = TRUE))
+    b <- mazing::maze2binary(x)
+    if (walls)
+        b <- !b
+    bm <- as_bm_bitmap.matrix(b)
+    if (!is.null(start) && !is.null(end)) {
+        if (solve) {
+            path <- mazing::solve_maze(x, start = start, end = end)
+
+            # Can get rid of this once `solve_maze()` supports `by = 0.5`
+            path2 <- matrix(0, nrow = 2L * nrow(path) - 1L, ncol = 2L)
+            path2[seq.int(1L, 2L * nrow(path) - 1L, 2L), 1L] <- path[, 1L]
+            path2[seq.int(1L, 2L * nrow(path) - 1L, 2L), 2L] <- path[, 2L]
+            for (i in seq_len(nrow(path) - 1)) {
+                path2[2L * i, 1L] <- mean(path[c(i, i+1L), 1L])
+                path2[2L * i, 2L] <- mean(path[c(i, i+1L), 2L])
+            }
+            path <- path2
+
+            for (i in seq_len(nrow(path))) {
+                bm[2L * path[i, 2L], 2L * path[i, 1L]] <- 3L
+            }
+        }
+        yxs <- mazing::find_maze_refpoint(start, x)
+        yxe <- mazing::find_maze_refpoint(end, x)
+        bm[2 * yxs[2L], 2 * yxs[1L]] <- 2L
+        bm[2 * yxe[2L], 2 * yxe[1L]] <- 2L
+    }
+    bm
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.nativeRaster <- function(x, ...,
+                                      mode = c("alpha", "darkness", "brightness"),
+                                      threshold = 0.5) {
+    mode <- match.arg(mode)
+    as_bm_bitmap.bm_pixmap(as_bm_pixmap.nativeRaster(x),
+                           mode = mode, threshold = threshold)
+}
+
+# #' @rdname as_bm_bitmap
+# #' @export
+# as_bm_bitmap.pattern_hex <- function(x, ...) {
+#     m <- matrix(as.integer(x), nrow = nrow(x), ncol = ncol(x))
+#     as_bm_bitmap(m)
+# }
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.pattern_square <- function(x, ...) {
+    m <- matrix(as.integer(x) - 1L, nrow = nrow(x), ncol = ncol(x))
+    as_bm_bitmap(m)
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.pattern_weave <- function(x, ...) {
+    m <- matrix(as.integer(x), nrow = nrow(x), ncol = ncol(x))
+    as_bm_bitmap(m)
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.pattern_square <- function(x, ...) {
+    m <- x - 1L
+    class(m) <- c("bm_bitmap", "bm_matrix", class(matrix()))
+    m
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.pixeltrix <- function(x, ...) {
+    m <- matrix(as.integer(x), nrow = nrow(x), ncol = ncol(x))
+    as_bm_bitmap(flip_matrix_vertically(m))
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.pixmapGrey <- function(x, ...,
+                                    mode = c("darkness", "brightness"),
+                                    threshold = 0.5) {
+    mode <- match.arg(mode)
+    grey <- switch(mode,
+                   brightness = as.double(x@grey),
+                   darkness = 1 - as.double(x@grey)
+                   )
+    m <- flip_matrix_vertically(matrix(as.matrix(grey >= threshold),
+                                       nrow = x@size[1L], ncol = x@size[2L]))
+    as_bm_bitmap.matrix(m)
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.pixmapIndexed <- function(x, ...) {
+    as_bm_bitmap.matrix(flip_matrix_vertically(x@index - 1L))
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.pixmapRGB <- function(x, ...,
+                                   mode = c("darkness", "brightness"),
+                                   threshold = 0.5) {
+    mode <- match.arg(mode)
+    red <- as.double(x@red)
+    green <- as.double(x@green)
+    blue <- as.double(x@blue)
+    # make darker higher number
+    grey <- switch(mode,
+                   brightness = rgba2brightness(red, green, blue),
+                   darkness = rgba2darkness(red, green, blue)
+                   )
+    m <- flip_matrix_vertically(matrix(as.matrix(grey >= threshold),
+                                       nrow = x@size[1L], ncol = x@size[2L]))
+    as_bm_bitmap.matrix(m)
+}
+
+#' @rdname as_bm_bitmap
+#' @export
+as_bm_bitmap.raster <- function(x, ...,
+                                mode = c("alpha", "darkness", "brightness"),
+                                threshold = 0.5) {
+    mode <- match.arg(mode)
+    as_bm_bitmap.bm_pixmap(as_bm_pixmap.raster(x),
+                           mode = mode, threshold = threshold)
 }
