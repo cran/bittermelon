@@ -1,7 +1,7 @@
 Package: bittermelon
 Type: Package
 Title: Bitmap Tools
-Version: 2.0.2
+Version: 2.1.1
 Authors@R: c(person("Trevor L.", "Davis", role = c("aut", "cre"),
                     email = "trevor.l.davis@gmail.com",
                     comment = c(ORCID = "0000-0001-6341-4639")),
@@ -16,19 +16,19 @@ URL: https://trevorldavis.com/R/bittermelon/
 BugReports: https://github.com/trevorld/bittermelon/issues
 License: MIT + file LICENSE
 Imports: cli, grDevices, grid, png, Unicode, utils
-Suggests: farver, gridpattern, hexfont, knitr, magick, mazing, ragg,
-        rmarkdown, testthat, vdiffr, withr
+Suggests: colorfast, farver, gridpattern, hexfont (>= 0.5.1), knitr,
+        magick, mazing, ragg, rmarkdown, testthat, vdiffr, withr
 VignetteBuilder: knitr, rmarkdown
 SystemRequirements: 'monobit' for reading/writing additional bitmap
         font formats.
 Encoding: UTF-8
 RoxygenNote: 7.3.1
 NeedsCompilation: no
-Packaged: 2024-06-25 05:51:02 UTC; trevorld
+Packaged: 2025-01-15 22:55:55 UTC; trevor
 Author: Trevor L. Davis [aut, cre] (<https://orcid.org/0000-0001-6341-4639>),
   Frederic Cambus [tyg] (Developer of included 'Spleen' font),
   Markus Kuhn [tyg] (Maintainer of included 'Fixed' font),
   josehzz [art] (Artist of included 'Farming Crops 16x16' sprites)
 Maintainer: Trevor L. Davis <trevor.l.davis@gmail.com>
 Repository: CRAN
-Date/Publication: 2024-06-25 14:50:02 UTC
+Date/Publication: 2025-01-16 09:10:06 UTC

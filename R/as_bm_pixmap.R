@@ -44,12 +44,19 @@ as_bm_pixmap <- function(x, ...) {
 #' @rdname as_bm_pixmap
 #' @export
 as_bm_pixmap.default <- function(x, ...) {
-    as_bm_pixmap.raster(grDevices::as.raster(x, ...))
+    # "bitmap" "rgba" array from `pdftools::pdf_render_page()`
+    if (is.array(x) && is.raw(x))
+        as_bm_pixmap.array(x)
+    else
+        as_bm_pixmap.raster(grDevices::as.raster(x, ...))
 }
 
 #' @rdname as_bm_pixmap
 #' @export
 as_bm_pixmap.array <- function(x, ...) {
+    if (is.raw(x)) {
+        x <- aperm(structure(as.numeric(x) / 255, dim = dim(x)))
+    }
     as_bm_pixmap.raster(grDevices::as.raster(x, ...))
 }
 
@@ -99,6 +106,12 @@ as_bm_pixmap.grob <- function(x, ..., width = 16L, height = 16L,
 
     a <- png::readPNG(png_file, native = FALSE)
     as_bm_pixmap.array(a)
+}
+
+#' @rdname as_bm_pixmap
+#' @export
+`as_bm_pixmap.lofi-matrix` <- function(x, ..., col = getOption("bittermelon.col", col_bitmap)) {
+    as_bm_pixmap.bm_bitmap(`as_bm_bitmap.lofi-matrix`(x), col = col)
 }
 
 #' @rdname as_bm_pixmap

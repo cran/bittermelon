@@ -24,9 +24,9 @@ bm <- bml |>
 print(bm)
 
 ## ----print_color, eval=FALSE--------------------------------------------------
-#  if (cli::num_ansi_colors() >= 16L)
-#      print(bm, px = " ",
-#            bg = c(cli::bg_br_white, cli::bg_blue, cli::bg_cyan, cli::bg_red))
+# if (cli::num_ansi_colors() >= 16L)
+#     print(bm, px = " ",
+#           bg = c(cli::bg_br_white, cli::bg_blue, cli::bg_cyan, cli::bg_red))
 
 ## ----plot, fig.width = 6, fig.height = 2, fig.alt = "Stylized bitmap image that says 'RSTATS`."----
 plot(bm, col = c("white", "blue3", "cyan3", "red3"))
@@ -68,8 +68,8 @@ tulip <- crops$tulip$portrait
 pm <- cbind(corn, grapes, orange, tulip)
 
 ## ----print_crops, eval=FALSE--------------------------------------------------
-#  if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L)
-#      print(pm, compress = "v", bg = "white")
+# if (cli::is_utf8_output() && cli::num_ansi_colors() >= 256L)
+#     print(pm, compress = "v", bg = "white")
 
 ## ----plot_sprites, fig.width = 6, fig.height = 1.5, fig.alt = "Sprites of some food crops"----
 plot(pm)
@@ -88,15 +88,14 @@ as_bm_bitmap("RSTATS", font = fixed_4x6) |> bm_compress("v")
 as_bm_bitmap("RSTATS", font = fixed_5x8) |> bm_compress("v")
 as_bm_bitmap("RSTATS", font = fixed_6x13) |> bm_compress("v")
 
-## ----unifont, eval=requireNamespace("hexfont")--------------------------------
+## ----unifont, eval=requireNamespace("hexfont") && file.exists(hexfont:::unifont_cache_filename())----
 library("hexfont")
 system.time(font <- unifont()) # Unifont is a **big** font
 length(font) |> prettyNum(big.mark = ",") # number of glyphs
 object.size(font) |> format(units = "MB") # memory used
 
 # Faster to load from a cache
-saveRDS(font, "unifont.rds")
-system.time(font <- readRDS("unifont.rds"))
+system.time(font <- unifont(cache = TRUE))
 
 # Or just load the subset of GNU Unifont you need
 s <- "Ｒ很棒！"
@@ -113,7 +112,4 @@ as_bm_list("", font = font) |>
     bm_pad(type = "trim", left = 1L, right = 1L) |>
     bm_call(cbind) |>
     bm_compress("v")
-
-## ----hidden2, echo = FALSE----------------------------------------------------
-unlink("unifont.rds")
 

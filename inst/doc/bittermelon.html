@@ -27,22 +27,6 @@ document.addEventListener('DOMContentLoaded', function(e) {
   }
 });
 </script>
-<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
-// v0.0.1
-// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
-
-document.addEventListener('DOMContentLoaded', function() {
-  const codeList = document.getElementsByClassName("sourceCode");
-  for (var i = 0; i < codeList.length; i++) {
-    var linkList = codeList[i].getElementsByTagName('a');
-    for (var j = 0; j < linkList.length; j++) {
-      if (linkList[j].innerHTML === "") {
-        linkList[j].setAttribute('aria-hidden', 'true');
-      }
-    }
-  }
-});
-</script>
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -67,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
@@ -392,13 +377,13 @@ pre,code {
 </style>
 <div id="bitmap-font-glyphs" class="section level3">
 <h3><a name="ex-glyphs">Bitmap font glyphs</a></h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="kw">library</span>(<span class="st">&quot;bittermelon&quot;</span>) <span class="co"># remotes::install_github(&quot;trevorld/bittermelon&quot;)</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a>font_file &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;fonts/spleen/spleen-8x16.hex.gz&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;bittermelon&quot;</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a>font &lt;-<span class="st"> </span><span class="kw">read_hex</span>(font_file)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a>bml &lt;-<span class="st"> </span><span class="kw">as_bm_list</span>(<span class="st">&quot;RSTATS&quot;</span>, <span class="dt">font =</span> font)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a><span class="co"># With vertical compression</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a>bm &lt;-<span class="st"> </span>bml <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">bm_call</span>(cbind) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">bm_compress</span>(<span class="st">&quot;vertical&quot;</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a><span class="kw">print</span>(bm)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;bittermelon&quot;</span>) <span class="co"># remotes::install_github(&quot;trevorld/bittermelon&quot;)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>font_file <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;fonts/spleen/spleen-8x16.hex.gz&quot;</span>, <span class="at">package =</span> <span class="st">&quot;bittermelon&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>font <span class="ot">&lt;-</span> <span class="fu">read_hex</span>(font_file)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>bml <span class="ot">&lt;-</span> <span class="fu">as_bm_list</span>(<span class="st">&quot;RSTATS&quot;</span>, <span class="at">font =</span> font)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># With vertical compression</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>bm <span class="ot">&lt;-</span> bml <span class="sc">|&gt;</span> <span class="fu">bm_call</span>(cbind) <span class="sc">|&gt;</span> <span class="fu">bm_compress</span>(<span class="st">&quot;vertical&quot;</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(bm)</span></code></pre></div>
 <pre class="bitmap"><code>                                                
 ██▀▀▀█▄ ▄█▀▀▀▀▀ ▀▀▀██▀▀▀▄█▀▀▀█▄ ▀▀▀██▀▀▀▄█▀▀▀▀▀ 
 ██   ██ ██         ██   ██   ██    ██   ██      
@@ -407,11 +392,11 @@ pre,code {
 ██   ██ ▄▄▄▄▄█▀    ██   ██   ██    ██   ▄▄▄▄▄█▀ 
                                                 
                                                 </code></pre>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="co"># Upside down with ASCII characters</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a>bm &lt;-<span class="st"> </span>bml <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a><span class="st">    </span><span class="kw">bm_flip</span>(<span class="st">&quot;both&quot;</span>) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true"></a><span class="st">    </span><span class="kw">bm_call</span>(cbind, <span class="dt">direction =</span> <span class="st">&quot;RTL&quot;</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true"></a><span class="kw">print</span>(bm, <span class="dt">px =</span> px_ascii)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Upside down with ASCII characters</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>bm <span class="ot">&lt;-</span> bml <span class="sc">|&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bm_flip</span>(<span class="st">&quot;both&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bm_call</span>(cbind, <span class="at">direction =</span> <span class="st">&quot;RTL&quot;</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(bm, <span class="at">px =</span> px_ascii)</span></code></pre></div>
 <pre class="bitmap"><code>------------------------------------------------
 ------------------------------------------------
 ------------------------------------------------
@@ -428,14 +413,14 @@ pre,code {
 -@@@@@@-@@@@@@@@--@@@@@-@@@@@@@@-@@@@@@---@@@@@@
 ------------------------------------------------
 ------------------------------------------------</code></pre>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="co"># With a shadow effect and borders</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a>bm &lt;-<span class="st"> </span>bml <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true"></a><span class="st">    </span><span class="kw">bm_pad</span>(<span class="dt">sides =</span> 2L) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true"></a><span class="st">    </span><span class="kw">bm_shadow</span>() <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true"></a><span class="st">    </span><span class="kw">bm_extend</span>(<span class="dt">sides =</span> <span class="kw">c</span>(2L, 1L), <span class="dt">value =</span> 3L) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true"></a><span class="st">    </span><span class="kw">bm_call</span>(cbind) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true"></a><span class="st">    </span><span class="kw">bm_pad</span>(<span class="dt">sides =</span> 2L, <span class="dt">value =</span> 3L)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true"></a><span class="kw">print</span>(bm)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># With a shadow effect and borders</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>bm <span class="ot">&lt;-</span> bml <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bm_pad</span>(<span class="at">sides =</span> 2L) <span class="sc">|&gt;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bm_shadow</span>() <span class="sc">|&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bm_extend</span>(<span class="at">sides =</span> <span class="fu">c</span>(2L, 1L), <span class="at">value =</span> 3L) <span class="sc">|&gt;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bm_call</span>(cbind) <span class="sc">|&gt;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bm_pad</span>(<span class="at">sides =</span> 2L, <span class="at">value =</span> 3L)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(bm)</span></code></pre></div>
 <pre class="bitmap"><code>▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 ▓▓░░░░░░░░░░░░▓▓░░░░░░░░░░░░▓▓░░░░░░░░░░░░░▓▓░░░░░░░░░░░░▓▓░░░░░░░░░░░░░▓▓░░░░░░░░░░░░▓▓
@@ -456,18 +441,18 @@ pre,code {
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</code></pre>
 <p>We can also print colored terminal output with help of <code>{cli}</code>:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="cf">if</span> (cli<span class="op">::</span><span class="kw">num_ansi_colors</span>() <span class="op">&gt;=</span><span class="st"> </span>16L)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a>    <span class="kw">print</span>(bm, <span class="dt">px =</span> <span class="st">&quot; &quot;</span>,</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a>          <span class="dt">bg =</span> <span class="kw">c</span>(cli<span class="op">::</span>bg_br_white, cli<span class="op">::</span>bg_blue, cli<span class="op">::</span>bg_cyan, cli<span class="op">::</span>bg_red))</span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="kw">plot</span>(bm, <span class="dt">col =</span> <span class="kw">c</span>(<span class="st">&quot;white&quot;</span>, <span class="st">&quot;blue3&quot;</span>, <span class="st">&quot;cyan3&quot;</span>, <span class="st">&quot;red3&quot;</span>))</span></code></pre></div>
-<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAADACAMAAADbayz1AAAADFBMVEUAAM0Azc3NAAD///9ZCTVSAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAEN0lEQVR4nO3asXIbSRBEQUD8/3+WQ0OImMb2bLGDmFA+905dw2V60uNLCnr89gN0dgApCiBFAaQogBQFkKIAUhRAigJIUQApCiBFAaQogBQFkKIAUhRAigJIUQApCiBFAaQogBQFkKIAUhRAigJIUQApCiBFAaQogBQFkKIAUhRAigJIUY8/UhBAigJIUQApCiBFAaQogBQFkKIAUhRAigJIUQApCiBFvQL64b+pHbw9+ezFwtmvn7wNUGvh7NdP3gaotXD26ydvA9RaOPv1k7cBai2c/frJ2wC1Fs5+/eRtgFoLZ79+8jZArYWzXz95G6DWwtmvn7wNUGvh7NdP3gaotXD26ydvA9RaOPv1k7cBai2c/frJ228APXoFP0VzYTURP3tv4dbr73yYkdevnnD/NEA3FgCqbgPUWgCoug1QawGg6jZArQWAqtsAtRYAqm4D1FoAqLrdBfRctLe0d3vR3geqX3pnYe/1wYcZeX39+PzbA9RaAKi6DVBrAaDqNkCtBYCq2wC1FgCqbgPUWgCour0JaO9/2Lq9+o51l7+CvZdeLey9PvgwI6+vr+XfHqDWAkDVbYBaCwBVtwFqLQBU3QaotQBQdRug1gJA1W2AWgsAVbcBai0AVN0GqLUAUHUboNYCQNVtgFoLAFW3AWotAFTdBqi1AFB1O/830c+Xmj9Fc+HOB1o1Caj5fX7z9ZdHg28PUGsBoOo2QK0FgKrbALUWAKpuA9RaAKi6DVBrAaDqNkCtBYCq27/0j+pfunP7cwBdPf5DAX0X/1oBqgIIoLc/ytWfAQigtz/K1Z8BCKC3P8rVnwEIoLc/ytWfAWgC0N7/sPedrm4Hp+cB7c19DqA7cwABFM0BBFA0BxBA0RxAAEVzAAEUzQEEUDQHEEDRHEAARXMAARTNAQRQNAcQQNEcQABFcwABFM0BBFA0BxBA0RxAAEVzAAEUzQEEUDQHEEDR3CcAevR6/lvwgQAqruXfHqAqgADqv3QRQAD1X7oIIID6L10EEED9ly4CKAX0XX1o8d/3vtOz2dYHetPV0Xrh8vV7c3def/lJ9hbuf3qAbvwKAKpuA1QFULUD0P6vAKDqNkBVAFU7AO3/CgCqbgNUBVC1swkoaPD25LMXC2e/fvI2QK2Fs18/eRug1sLZr5+8DVBr4ezXT94GqLVw9usnbwPUWjj79ZO3AWotnP36ydsAtRbOfv3kbYBaC2e/fvI2QK2Fs18/eRug1sLZr5+8DVBr4ezXT94GqLVw9usnb78CkjYDSFEAKQogRQGkKIAUBZCiAFIUQIoCSFEAKQogRQGkqMcP/02t/rMAUhRAigJIUQApCiBFAaQogBQFkKIAUhRAigJIUQApCiBFAaQogBQFkKIAUhRAigJIUQApCiBFAaQogBQFkKIAUhRAigJIUQApCiBFAaQogBQFkKIAUtRfBbYji9UFeVwAAAAASUVORK5CYII=" alt="Stylized bitmap image that says &#39;RSTATS`." /></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (cli<span class="sc">::</span><span class="fu">num_ansi_colors</span>() <span class="sc">&gt;=</span> 16L)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(bm, <span class="at">px =</span> <span class="st">&quot; &quot;</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">bg =</span> <span class="fu">c</span>(cli<span class="sc">::</span>bg_br_white, cli<span class="sc">::</span>bg_blue, cli<span class="sc">::</span>bg_cyan, cli<span class="sc">::</span>bg_red))</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(bm, <span class="at">col =</span> <span class="fu">c</span>(<span class="st">&quot;white&quot;</span>, <span class="st">&quot;blue3&quot;</span>, <span class="st">&quot;cyan3&quot;</span>, <span class="st">&quot;red3&quot;</span>))</span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAADAAgMAAACR2zRUAAAADFBMVEUAAM0Azc3NAAD///9ZCTVSAAAACXBIWXMAAA7DAAAOwwHHb6hkAAABmUlEQVR42u3bPVLCUBQG0DiMtZXrwSVYyKTMUtgPFi5BNuEmrGzslBhIXniPPMcUwMTMuQ3DJfk4FMnNH0U9sSqAgICAgICAgICAgICAgICAgIAmBdpMrICAgICAgOYAes0M3Xx717SzM/p9s3nOt19yi/+SswMCAgICApoP6KMItUxBfb+IgrZFVHcxKOQsYtBXvHiRgPruAggI6Pqgm1VTT90addo+VBUFNW8fiuK2/eAIata+33fCDwv7oc82+TRnm4kHApo1qGq30FWZgtb5Kb3dg9bptN+DygBLp32fnO4+BvFAQEBAQEDzAXXVTOsyc0y9HAs65vwNysUDAQFdD5Q7yG/qO26P2Q91B/njQG384+hTaSCgfw4aTvs6TqvOPu1DhW8HAgICAgICAgICmh0oOcOuLnEFbRAPBDRXUF2/HVqH13iz7+/Rroaba9M8Ae3v9pbhDPn0CasuOcnp08vBI19AQECXBnnSEwgICAgI6Hwg/1EEAgICAgI6J6ieWAEBAQEBAQEBAQEBAQEBAQEBAU2qfgCulOxEAzFrnQAAAABJRU5ErkJggg==" alt="Stylized bitmap image that says &#39;RSTATS`." /></p>
 </div>
 <div id="gridpattern-matrices" class="section level3">
 <h3><a name="ex-gridpattern">{gridpattern} matrices</a></h3>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="co"># Also supports {gridpattern} matrices</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a>gridpattern<span class="op">::</span><span class="kw">pattern_weave</span>(<span class="st">&quot;twill_herringbone&quot;</span>, <span class="dt">nrow=</span>14L, <span class="dt">ncol =</span> 50L) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true"></a><span class="st">    </span><span class="kw">as_bm_bitmap</span>() <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true"></a><span class="st">    </span><span class="kw">print</span>(<span class="dt">compress =</span> <span class="st">&quot;vertical&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Also supports {gridpattern} matrices</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>gridpattern<span class="sc">::</span><span class="fu">pattern_weave</span>(<span class="st">&quot;twill_herringbone&quot;</span>, <span class="at">nrow=</span>14L, <span class="at">ncol =</span> 50L) <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_bm_bitmap</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(<span class="at">compress =</span> <span class="st">&quot;vertical&quot;</span>)</span></code></pre></div>
 <pre class="bitmap"><code> █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  
   █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█ 
 █  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█  █▄ ▀█
@@ -475,18 +460,18 @@ pre,code {
  ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ 
 ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ █
 █ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██ ▄█▀ ██</code></pre>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a>gridpattern<span class="op">::</span><span class="kw">pattern_square</span>(<span class="dt">subtype=</span>8L, <span class="dt">nrow=</span>8L, <span class="dt">ncol =</span> 50L) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a><span class="st">    </span><span class="kw">as_bm_pixmap</span>(s, <span class="dt">col =</span> grDevices<span class="op">::</span><span class="kw">rainbow</span>(8L)) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a><span class="st">    </span><span class="kw">plot</span>()</span></code></pre></div>
-<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAACQCAMAAADX5SQCAAAAG1BMVEUAQP8A/0AA//+AAP+A/wD/AAD/AL//vwD///+JFmNyAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAC2UlEQVR4nO3TSZLbQBQDUbkHu+9/Yi+lhXYgo4GKlwdIsgL5Hz9AwOO3fwDbCAgRAkKEgBAhIEQICBECQoSAECEgRAgIEQJChIAQISBECAgRAkKEgBAhIEQICBECQoSAECEgRAgIEQJChIAQISBEPP6+8P3k3wtfT/688PHk8cLnk8Pc3+/dX+/dH+/dn4e5BSQgAQlIQAvu2ZEF1OGeHVlAHe7ZkQXU4Z4dWUAd7tmRBdThnh1ZQB3u2ZEF1OGeHfnWgA5+29XuE47gcvdpIwtIQLXu2ZEF1OGeHVlAHe7ZkQXU4Z4dWUAd7tmRBdThnh1ZQB3u2ZEF1OGeHVlAHe7ZkQXU4Z4d+daADn7b1e4TjuByt4AEJCABCWjBPTuygDrcsyMLqMM9O7KAOtyzIwuowz07soA63LMjC6jDPTuygDrcsyPfGtDBb7vafcIRXO4WkIAEJCABLbhnRxZQh3t2ZAF1uGdHFlCHe3ZkAXW4Z0cWUId7dmQBdbhnRxZQh3t2ZAF1uGdHvjWgg992tfuEI7jefdjIAhJQrXt3ZAFVuHdHFlCFe3dkAVW4d0cWUIV7d2QBVbh3RxZQhXt3ZAFVuHdHFlCFe3dkAVW4d0e+0/3b3x9yn3AEl7sFJCABCUhAC+7ZkQXU4Z4dWUAd7tmRBdThnh1ZQB3u2ZEF1OGeHVlAHe7ZkQXU4Z4d+daADn7b1e4TjuByt4AEJCABCWjBPTuygDrcsyMLqMM9O7KAOtyzIwuowz07soA63LMjC6jDPTuygDrcsyMLqMM9O/KtAR38tqvdJxzB5W4BCUhAAhLQgnt2ZAF1uGdHFlCHe3ZkAXW4Z0cWUId7dmQBdbhnRxZQh3t2ZAF1uGdHvjWgHyBAQIgQECIEhAgBIUJAiBAQIgSECAEhQkCIEBAiBIQIASFCQIgQECIEhAgBIUJAiBAQIgSECAEhQkCIEBAiBIQIASFCQIj4Dy4DfLef5jSHAAAAAElFTkSuQmCC" alt="Rainbow squares" /></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>gridpattern<span class="sc">::</span><span class="fu">pattern_square</span>(<span class="at">subtype=</span>8L, <span class="at">nrow=</span>8L, <span class="at">ncol =</span> 50L) <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_bm_pixmap</span>(s, <span class="at">col =</span> grDevices<span class="sc">::</span><span class="fu">rainbow</span>(8L)) <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">plot</span>()</span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAACQBAMAAAASFckDAAAAG1BMVEUAQP8A/0AA//+AAP+A/wD/AAD/AL//vwD///+JFmNyAAAACXBIWXMAAA7DAAAOwwHHb6hkAAABVElEQVR42u3dsQnDMBAFUEEmSCYIXiHg3uAVTCZIJgh4hYwd5EZq7IBAsor361/o3pUWVvjKYQICQIAAAQIECBAgAQQIECBAgAABEkCAAAECBAgQIAnvLUvMc435zDHXLUPMPcRcHjGN2kvWnlJ7yNpjozYgQIAAAQIECBAgQICKgB7pcK9slDmNcstGadTuaGGAAAECBAgQIECAAAECVAMopMON2ShrGmXKRmnU7mhhgAABAgQIECBAgAABKgI67YPTUbujhQECBAgQIECAAAECBAhQDaBzLyPutHtaGCBAgAABAgQIECBAgABVaJ97GXGn3dHCAAECBAgQIECAAAECVAR07mXEnXZHCwMECBAgQIAAAQIECBCgGkC9/Zavt4UBAgQIECBAgAABAgSoCMjzRl6HAgQIECBAgAAJIECAAAECBAiQAAIECBAgQIAACaA/+QGF9CRI701D9QAAAABJRU5ErkJggg==" alt="Rainbow squares" /></p>
 </div>
 <div id="mazing-mazes" class="section level3">
 <h3><a name="ex-mazes">{mazing} mazes</a></h3>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="co"># Also supports {mazing} mazes</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true"></a><span class="kw">set.seed</span>(<span class="dv">42</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true"></a>m &lt;-<span class="st"> </span>mazing<span class="op">::</span><span class="kw">maze</span>(16L, 32L)</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true"></a>m <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">as_bm_bitmap</span>(<span class="dt">walls =</span> <span class="ot">TRUE</span>) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true"></a><span class="st">    </span><span class="kw">print</span>(<span class="dt">compress =</span> <span class="st">&quot;vertical&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Also supports {mazing} mazes</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> mazing<span class="sc">::</span><span class="fu">maze</span>(16L, 32L)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>m <span class="sc">|&gt;</span> <span class="fu">as_bm_bitmap</span>(<span class="at">walls =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(<span class="at">compress =</span> <span class="st">&quot;vertical&quot;</span>)</span></code></pre></div>
 <pre class="bitmap"><code>█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█▀▀▀█▀▀▀▀▀█▀▀▀▀▀▀▀▀▀▀▀█▀▀▀▀▀█▀▀▀▀▀▀▀█▀▀▀▀▀▀▀█▀▀▀█ 
 █ █▀▀▀▀▀▀▀▀▀█ ▀▀▀ █ ▀ █ █ █ █ ▀▀█▀▀▀▀ ▀ █▀▀ █ █▀▀ █ ▀ █▀▀▀█ █ █ █ 
 █ █ ▀▀▀▀█▀▀ ▀▀▀▀█▀█▀▀▀▀ █ █ █▀▀ █▀▀▀█▀█▀▀ █▀▀▀▀ █▀▀▀▀▀█ ▀▀▀ █ █ █ 
@@ -504,47 +489,47 @@ pre,code {
 █ █ █ █▀▀▀▀ █ █ ▀▀█ ▀ █ █▀▀ █▀█ █▀▀▀█ █▀▀ █▀▀▀█▀▀ █▀▀▀▀▀▀ █ ▀ █ █ 
 █ ▀ █ ▀▀▀▀█ ▀▀▀▀▀ ▀▀▀▀▀▀▀ █▀▀ ▀ ▀ █ ▀▀▀ █▀▀ ▀▀▀ ▀▀▀▀▀▀▀ █ ▀▀▀▀▀ █ 
 ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ </code></pre>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a><span class="co"># Can also visualize the maze solutions</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true"></a>pal &lt;-<span class="st"> </span>grDevices<span class="op">::</span><span class="kw">palette.colors</span>()</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true"></a>m <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">as_bm_pixmap</span>(<span class="dt">start =</span> <span class="st">&quot;top&quot;</span>, <span class="dt">end =</span> <span class="st">&quot;bottom&quot;</span>,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true"></a>                  <span class="dt">col =</span> <span class="kw">c</span>(pal[6L], <span class="st">&quot;white&quot;</span>, pal[7L], pal[5L])) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true"></a><span class="st">   </span><span class="kw">bm_pad</span>(<span class="dt">sides =</span> 1L) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true"></a><span class="st">   </span><span class="kw">plot</span>()</span></code></pre></div>
-<p><img src="data:image/png;base64,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" alt="A maze" /></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Can also visualize the maze solutions</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>pal <span class="ot">&lt;-</span> grDevices<span class="sc">::</span><span class="fu">palette.colors</span>()</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>m <span class="sc">|&gt;</span> <span class="fu">as_bm_pixmap</span>(<span class="at">start =</span> <span class="st">&quot;top&quot;</span>, <span class="at">end =</span> <span class="st">&quot;bottom&quot;</span>,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">col =</span> <span class="fu">c</span>(pal[6L], <span class="st">&quot;white&quot;</span>, pal[7L], pal[5L])) <span class="sc">|&gt;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>   <span class="fu">bm_pad</span>(<span class="at">sides =</span> 1L) <span class="sc">|&gt;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">plot</span>()</span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAAEgAgMAAAAh6CRiAAAADFBMVEUAcrLVXgDw5EL////+/ayAAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAD30lEQVR42u3dQW6jQBCFYUR2bHIPX4JT+D4cxUtrNnMFzpMVB0BiBuhqqqqrcZZI/C1FiTIt/K3epNpV7Wa52GoAAQJ0T9DYXGB9AQIE6N6g/kNcpQDVG+f0iP/r+fyj1tA88s/vY9P+i0b947peacMMCBAgQJcDVdJ6xezf9039MjXf29f6iP3LrMcGem0/dxsobVgxO2jIm7sNJE8CBAjQ7UFlOM6NqmxlgweZ5FyWn5R3XQ7GuWklFCU55UmAAAEC5ECjKyXnOCw1yKSnXl0Kx3W1K0YveSlAgAABqgTjdJR3R+7ZDZVg3J/0MOGYQlFH7MMUioAAAQJ0VZCEcJHSB2hUaT3bjeumPoOOyrVY+4ah+E8BECBAgFRh6g7qbTBK5Sqbcnnb5Kf8qJP89ghHH4yv9JTaST4gQIBuB9KFaRCOY4q1yWxIIFuQ6tVKOPrqtdtAU34ZQIAA3R6ka8BJv1btJN8Eo/yBVrY/tHt3g5zi266G71yTzoAAAQJ0MZB912AqQ9iXt6ZyFZCktY7zDKq9SRFXroAAAbodqAzG3GphT9B6c5If9mMI6AjG1gbi4Lo6ZkCAAAEqK1dzQO9P8sPWUx+MctyfQLY3tZwLAgQIEKCwsyEHY3Tcbzob5CRfNupgNJ0N0iOv1xsQIECATlpPdYnnR3GKeZ3o/QDXHyGgwRz1AwIECNAVQfv345D+tCgNNzWu/g0nrmVWekh9qa8U5W9AgADdHeRP8k9npU/T0/djpC6KeHhIBohaQIAAAYpP8ovW0zE8g2/Ky2V8eubOBh2Mx0A1IECAALlD+qmck/5VZ0NfOe4v7o55JJCEIiBAgABdESSVa/HWwlnrqevH6Cs33hSX2exp/XfbCAgQIEDLMfYznl/uFxelblZaNumB6uIyGz88BAgQIEDhxX7BtTDRKE7RamEnroNWC78AAQIEqNLVEHaV6rtjqrf/6c6GPCstT9FdDW5eBxAgQHcHVVpPfaHoB2jmaOo4yrzFF4r7aHKt1QIQIECArgAa46ZRXbmGcV4rTLsEykktG/1Jfny7DiBAgG4I+thqoQtTd0i/BE0bnf2ELnlH0beevj9eMgoIEKCbgKqdDQLSJ/kH6F2flTatpwdoMO2ngAABAmT+QAsO6X1nqb1Hr40+26GvjeFEn84FCBAgQNcHFWM/tXv7TFepHqiuzkr79x4AAQIE6CQYw8tsolaLdIIW33gTNm1EpS0gQIAA1YKxdpJvRnF2UL319Kscpi5fChAgQLcH6VGcoqs0WmrD8/mru2P0Gt0GQIAAAboa6AILECBAtwZdaAECBOh2oH+DXw0ApYEMGgAAAABJRU5ErkJggg==" alt="A maze" /></p>
 </div>
 <div id="sprites" class="section level3">
 <h3><a name="ex-sprites">Sprites</a></h3>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true"></a><span class="co"># Contains some built-in farming crops sprites</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true"></a>crops &lt;-<span class="st"> </span><span class="kw">farming_crops_16x16</span>()</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true"></a><span class="kw">names</span>(crops)</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Contains some built-in farming crops sprites</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>crops <span class="ot">&lt;-</span> <span class="fu">farming_crops_16x16</span>()</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(crops)</span></code></pre></div>
 <pre class="bitmap"><code> [1] &quot;avocado&quot;    &quot;cassava&quot;    &quot;coffee&quot;     &quot;corn&quot;       &quot;cucumber&quot;  
  [6] &quot;eggplant&quot;   &quot;grapes&quot;     &quot;lemon&quot;      &quot;melon&quot;      &quot;orange&quot;    
 [11] &quot;pineapple&quot;  &quot;potato&quot;     &quot;rice&quot;       &quot;rose&quot;       &quot;strawberry&quot;
 [16] &quot;sunflower&quot;  &quot;tomato&quot;     &quot;tulip&quot;      &quot;turnip&quot;     &quot;wheat&quot;     </code></pre>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a>corn &lt;-<span class="st"> </span>crops<span class="op">$</span>corn<span class="op">$</span>portrait</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true"></a>grapes &lt;-<span class="st"> </span>crops<span class="op">$</span>grapes<span class="op">$</span>portrait</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true"></a>orange &lt;-<span class="st"> </span>crops<span class="op">$</span>orange<span class="op">$</span>stage5</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true"></a>tulip &lt;-<span class="st"> </span>crops<span class="op">$</span>tulip<span class="op">$</span>portrait</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true"></a>pm &lt;-<span class="st"> </span><span class="kw">cbind</span>(corn, grapes, orange, tulip)</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>corn <span class="ot">&lt;-</span> crops<span class="sc">$</span>corn<span class="sc">$</span>portrait</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>grapes <span class="ot">&lt;-</span> crops<span class="sc">$</span>grapes<span class="sc">$</span>portrait</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>orange <span class="ot">&lt;-</span> crops<span class="sc">$</span>orange<span class="sc">$</span>stage5</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>tulip <span class="ot">&lt;-</span> crops<span class="sc">$</span>tulip<span class="sc">$</span>portrait</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>pm <span class="ot">&lt;-</span> <span class="fu">cbind</span>(corn, grapes, orange, tulip)</span></code></pre></div>
 <p>We can pretty print sprites to the terminal with help of <code>{cli}</code>:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true"></a><span class="cf">if</span> (cli<span class="op">::</span><span class="kw">is_utf8_output</span>() <span class="op">&amp;&amp;</span><span class="st"> </span>cli<span class="op">::</span><span class="kw">num_ansi_colors</span>() <span class="op">&gt;=</span><span class="st"> </span>256L)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true"></a>    <span class="kw">print</span>(pm, <span class="dt">compress =</span> <span class="st">&quot;v&quot;</span>, <span class="dt">bg =</span> <span class="st">&quot;white&quot;</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true"></a><span class="kw">plot</span>(pm)</span></code></pre></div>
-<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAACQCAMAAADX5SQCAAAAMFBMVEUSICAUoC4aej4iHBokIjQkUjtAM1N5OoC0ICq8SpvfPiP5oxv6agr/1UH//ED////dWUAcAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAE+UlEQVR4nO3a23KcMBCEYTvrY+KE93/bXGwxBhoNIzXrWid/X4I0DKNvfUH5YSL/QZ7aMSs/nNIfufMAiFgBELECIGIFQMQKgIgVABErACJWALTKQzv31sYXNJaYiCvvc17nvMxJdlWQAei2bQDoHgOgZQDUHQAtA6DuAGgZAHUHQMsAqDsAWgZA3QHQMgDqDoCW+U6ALpKdijc7VK38Q3K7A6s8/XFOrHmeUxlLRaRGlcSV4KImkjV6JRtL1xABBKBtz11DBBCAtj13DRFAANr23DVEAAFo23PXEAEEoG3PXUMEEIC2PXcNEUAA2vbcNUQAAWjbc2V2weXPnN9z4la8qg6x8oisRamsXPSczIdWnv7cTqXDROSjxJT0LtEv0V1uPudTWQQgADXnU1kEIAA151NZBCAANedTWQQgADXnU1kEIAA151NZBCAANedTWQQgADXnU1kEIAA155PcS9wkkm4HqHIGT+2YT1c3lcYu7SR1EohJq8olTOiVyIsEQAAC0LJFAAHICYAAZAVAALICIABZARCArAAIQFYA9O0BJW7iSiyOdzYl6cklZ6lrYhwxu7MkJW6ijZjGT8nHHJU05iYSL1hxAyAAbQOgdWcAAhCAAASgbT8AWo0luQeg3X4AtBpLcg9Au/0AaDWW5B6AdvsB0GosyT0A7fYDoNVYKosqknQupqSuA9NHxDhiUiagpLHETYzl15y4Emtil1Ye6zDeNAFkuvmcRmURgPLGAHQQAOWNAeggAMobA9BBAJQ3BqCDAChvDEAHAVDeGIAOAqC8MQAdBEB5YwCqTipeNcYRgOJKrNHvqhVJcUsXV6LjOMtN0mq88tucipu4EnX0FzLWWLxyxQ2AALQNgAAEIAABCEAHswMQgJwAaAKQEwBNAHICoAlATgA07QLSI4zoJ9eYQpekCiBdrPNNphBX9F9aT7cVb6qgPyQKKNiZbjQ6jbPcRAAEIAABqBEAAcgKgABkBUAAsgIgAFkBEICsAAhAVr4UkLrRI4wrsSZuKSkTULIrkpjQj7B6S231zU6SjE4/UoekuBUTGzvLJLf78QAIQFYABCArAAKQFQAByAqAAGQFQACyAiAAWQEQgKzsANLoGj3dmN2lndiVAEqeFVe6vjJ32aqMVX9OOg3t+a2dmE/lB2bm9MoAApBXUEsDCEAdBbU0gADUUVBLAwhAHQW1NIAA1FFQSwMIQB0FtTSAANRRUEsDCEAdBc0+EkmVsSaV9WN3nG4AUgFjtqJO8m06cVNJKFE3OijzmCt/AsYq7zxrcBuAAHQtOLgNQAC6FhzcBiAAXQsObgMQgK4FB7cBCEDXgoPbAASga8HBbQAC0LXg4DYAAeha0N3fltTlRgsm2xMKia1EyaskAfQo0YPXsVwkWvms09UZVkiNPR1AAAIQgI5mCCAAjRwKgABkHQqAAGQdCoAAZB0KgABkHQqAAGQdyjcAlPThdja0fcyWZuxNk8Vdv6KzUjkURdb3iK/s1SxY2QWgYqsRAK0CoGKrEQCtAqBiqxEArQKgYqsRAK0CoGKrEQCtAqBiqxEArQKgYqsRAK0CoGKrkXsBdP/pUvKv5qyf92fBc/u75wBoApATAE0AcgKgCUBOADQByAmAJgA5AdAEICcAmgDkBEATgIgZk8tOwbMKkW8RABErACJWAESsAIhYARCxAiBiBUDEyumA/gItMU/M/viDbwAAAABJRU5ErkJggg==" alt="Sprites of some food crops" /></p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (cli<span class="sc">::</span><span class="fu">is_utf8_output</span>() <span class="sc">&amp;&amp;</span> cli<span class="sc">::</span><span class="fu">num_ansi_colors</span>() <span class="sc">&gt;=</span> 256L)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(pm, <span class="at">compress =</span> <span class="st">&quot;v&quot;</span>, <span class="at">bg =</span> <span class="st">&quot;white&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pm)</span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAACQBAMAAAASFckDAAAAMFBMVEUSICAUoC4aej4iHBokIjQkUjtAM1N5OoC0ICq8SpvfPiP5oxv6agr/1UH//ED////dWUAcAAAACXBIWXMAAA7DAAAOwwHHb6hkAAADkUlEQVR42u3dPWsUURTG8VGTVMIa/QK+YK8GQcSXJihWkYV8g7BiLwZrmxSWgljbiNhZqiDYiElnKfoNlAW3j/MMcw9zOJO5M+tW7v9Ud+/O7tz5bXNy7kuKw+WLzWZsZS4uAAIIIIAAAggggABadBTNGM31FVP3HdYzH4dezNR4WcaL3TImZey4tyIZQAABBBBAAAEEEEAu/mzUcTuMdTTkwY6fr+PskAeLHz+3XoZ6VrfLcGS5H0PPfE8matyVi8ukrccaAAEEEEAAAQQQQAAdASSXW7/L+FHGN73SXY+lIeaA7GJz0TPd7wvkPn5xuxnxCy0MUXEq3MsS6OepUYVl0rJ5lFLqQ4AAAggggAACCCCAAlCVQMvml3Csod7LQ4B8vqtYcelr5uNVAm0KjuPERjPcNR6xHaiqtFpD8XhSxw5AAAEEEEAAAQQQQBkgkfxMmXTVUO8V3bo9T/WlUhuipcLWo3E8TNXPrR4lV4OuyDSM62/qeHtQhnquJpuxrmn/CWcpXX6iu+82AyCAAAIIIIAAAgigQSXXmy6T1lg+q9tNk4/6PpixahwP2qfAO9aA6isu6O7m8r6MD2qo51UqCheZqq5N0htOspl0jAcggAACCCCAAAIIIPeEVWVT4/goIDXepRLnuD2ldvP3MdbSOHIl1zge3fjaXhki2ddY1PgqHDU+9Z3+t5WaLoEGCCCAAAIIIIAAAigHZE+oOJ1KnDc0BiF918isxBmnwC1vdpn0mitoupJr7xN8dNNLCfrkQR0G9EV2fbchzdIwJplKK0AAAQQQQAABBBBAlrCaSyyVmlQGaNW9FdduWq3TklrbgZOZpPfbh0TyLJVcX+uV28Gei+EHTQIEEEAAAQQQQAAtNVA8z9EVWM+0b7OJz2NvtefN/uAe24/dcnBPc9vP2O3/2WvG07RoYPgRRX0uBAgggAACCCCAAFpqoI5llJYcV2s341jb5+ZXUmXTlmze0SvLm6OUS6mnbrNQDJut78jsO1aFAgQQQAABBBBAAAH0j0AxpbZBx7nweO6PU6iALG+2HdoxpXYl4HVXabUfzBJ692dAn4ONbPWAl+r4OEAAAQQQQAABBBBAfXLQzO7rjpvNHJdLsjePLrnG/0YzHXzEefsIC/ffcQACCCCAAAIIIIAAmg9o4TF4f/jCY9rj9wYIIIAAAggggAACaAljYXPzAAEEEEAAAQQQQP8r0F+KV8wRjc06+wAAAABJRU5ErkJggg==" alt="Sprites of some food crops" /></p>
 </div>
 </div>
 <div id="builtin-fonts" class="section level2">
 <h2><a name="fonts">Builtin Fonts</a></h2>
 <p><code>{bittermelon}</code> has a builtin versions of the 8x16 <a href="https://github.com/fcambus/spleen">Spleen</a> font as well as 4x6 and 6x13 <a href="https://www.cl.cam.ac.uk/~mgk25/ucs-fonts.html">Fixed</a> fonts.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a>spleen_8x16 &lt;-<span class="st"> </span><span class="kw">read_hex</span>(<span class="kw">system.file</span>(<span class="st">&quot;fonts/spleen/spleen-8x16.hex.gz&quot;</span>,</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true"></a>                                    <span class="dt">package =</span> <span class="st">&quot;bittermelon&quot;</span>))</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true"></a>fixed_4x6 &lt;-<span class="st"> </span><span class="kw">read_yaff</span>(<span class="kw">system.file</span>(<span class="st">&quot;fonts/fixed/4x6.yaff.gz&quot;</span>,</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true"></a>                                   <span class="dt">package =</span> <span class="st">&quot;bittermelon&quot;</span>))</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true"></a>fixed_5x8 &lt;-<span class="st"> </span><span class="kw">read_yaff</span>(<span class="kw">system.file</span>(<span class="st">&quot;fonts/fixed/5x8.yaff.gz&quot;</span>,</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true"></a>                                   <span class="dt">package =</span> <span class="st">&quot;bittermelon&quot;</span>))</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true"></a>fixed_6x13 &lt;-<span class="st"> </span><span class="kw">read_yaff</span>(<span class="kw">system.file</span>(<span class="st">&quot;fonts/fixed/6x13.yaff.gz&quot;</span>,</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true"></a>                                    <span class="dt">package =</span> <span class="st">&quot;bittermelon&quot;</span>))</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true"></a><span class="kw">as_bm_bitmap</span>(<span class="st">&quot;RSTATS&quot;</span>, <span class="dt">font =</span> spleen_8x16) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>spleen_8x16 <span class="ot">&lt;-</span> <span class="fu">read_hex</span>(<span class="fu">system.file</span>(<span class="st">&quot;fonts/spleen/spleen-8x16.hex.gz&quot;</span>,</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">package =</span> <span class="st">&quot;bittermelon&quot;</span>))</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>fixed_4x6 <span class="ot">&lt;-</span> <span class="fu">read_yaff</span>(<span class="fu">system.file</span>(<span class="st">&quot;fonts/fixed/4x6.yaff.gz&quot;</span>,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">package =</span> <span class="st">&quot;bittermelon&quot;</span>))</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>fixed_5x8 <span class="ot">&lt;-</span> <span class="fu">read_yaff</span>(<span class="fu">system.file</span>(<span class="st">&quot;fonts/fixed/5x8.yaff.gz&quot;</span>,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">package =</span> <span class="st">&quot;bittermelon&quot;</span>))</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>fixed_6x13 <span class="ot">&lt;-</span> <span class="fu">read_yaff</span>(<span class="fu">system.file</span>(<span class="st">&quot;fonts/fixed/6x13.yaff.gz&quot;</span>,</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">package =</span> <span class="st">&quot;bittermelon&quot;</span>))</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="fu">as_bm_bitmap</span>(<span class="st">&quot;RSTATS&quot;</span>, <span class="at">font =</span> spleen_8x16) <span class="sc">|&gt;</span> <span class="fu">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
 <pre class="bitmap"><code>                                                
 ██▀▀▀█▄ ▄█▀▀▀▀▀ ▀▀▀██▀▀▀▄█▀▀▀█▄ ▀▀▀██▀▀▀▄█▀▀▀▀▀ 
 ██   ██ ██         ██   ██   ██    ██   ██      
@@ -553,16 +538,16 @@ pre,code {
 ██   ██ ▄▄▄▄▄█▀    ██   ██   ██    ██   ▄▄▄▄▄█▀ 
                                                 
                                                 </code></pre>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true"></a><span class="kw">as_bm_bitmap</span>(<span class="st">&quot;RSTATS&quot;</span>, <span class="dt">font =</span> fixed_4x6) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as_bm_bitmap</span>(<span class="st">&quot;RSTATS&quot;</span>, <span class="at">font =</span> fixed_4x6) <span class="sc">|&gt;</span> <span class="fu">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
 <pre class="bitmap"><code>█▀▄ ▄▀▀ ▀█▀ ▄▀▄ ▀█▀ ▄▀▀ 
 █▀▄  ▀▄  █  █▀█  █   ▀▄ 
 ▀ ▀ ▀▀   ▀  ▀ ▀  ▀  ▀▀  </code></pre>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true"></a><span class="kw">as_bm_bitmap</span>(<span class="st">&quot;RSTATS&quot;</span>, <span class="dt">font =</span> fixed_5x8) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as_bm_bitmap</span>(<span class="st">&quot;RSTATS&quot;</span>, <span class="at">font =</span> fixed_5x8) <span class="sc">|&gt;</span> <span class="fu">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
 <pre class="bitmap"><code>▄▄▄   ▄▄   ▄▄▄  ▄▄   ▄▄▄  ▄▄  
 █  █ ▀▄ ▀   █  █  █   █  ▀▄ ▀ 
 █▀▀▄ ▄ ▀▄   █  █▀▀█   █  ▄ ▀▄ 
 ▀  ▀  ▀▀    ▀  ▀  ▀   ▀   ▀▀  </code></pre>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true"></a><span class="kw">as_bm_bitmap</span>(<span class="st">&quot;RSTATS&quot;</span>, <span class="dt">font =</span> fixed_6x13) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as_bm_bitmap</span>(<span class="st">&quot;RSTATS&quot;</span>, <span class="at">font =</span> fixed_6x13) <span class="sc">|&gt;</span> <span class="fu">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
 <pre class="bitmap"><code>                                    
 █▀▀▀▄ ▄▀▀▀▄ ▀▀█▀▀  ▄▀▄  ▀▀█▀▀ ▄▀▀▀▄ 
 █   █ █       █   █   █   █   █     
@@ -574,26 +559,25 @@ pre,code {
 <div id="gnu-unifont-via-hexfont" class="section level2">
 <h2><a name="hexfont">GNU Unifont via {hexfont}</a></h2>
 <p>The <a href="https://github.com/trevorld/hexfont">{hexfont}</a> package includes a helper function <code>unifont()</code> which loads several GNU Unifont hex fonts as a single <code>{bittermelon}</code> <code>bm_font()</code> object. <a href="https://unifoundry.com/unifont/index.html">GNU Unifont</a> is a monoscale bitmap font (8x16 and 16x16 glyphs) that pretty much covers all of the official Unicode glyphs plus several of the artificial scripts in the <a href="https://www.kreativekorp.com/ucsur/">(Under-)ConScript Unicode Registry</a>.</p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true"></a><span class="kw">library</span>(<span class="st">&quot;hexfont&quot;</span>)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true"></a><span class="kw">system.time</span>(font &lt;-<span class="st"> </span><span class="kw">unifont</span>()) <span class="co"># Unifont is a **big** font</span></span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;hexfont&quot;</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(font <span class="ot">&lt;-</span> <span class="fu">unifont</span>()) <span class="co"># Unifont is a **big** font</span></span></code></pre></div>
 <pre class="bitmap"><code>   user  system elapsed 
-124.918   0.207 125.213 </code></pre>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true"></a><span class="kw">length</span>(font) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">prettyNum</span>(<span class="dt">big.mark =</span> <span class="st">&quot;,&quot;</span>) <span class="co"># number of glyphs</span></span></code></pre></div>
-<pre class="bitmap"><code>[1] &quot;123,234&quot;</code></pre>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true"></a><span class="kw">object.size</span>(font) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">format</span>(<span class="dt">units =</span> <span class="st">&quot;MB&quot;</span>) <span class="co"># memory used</span></span></code></pre></div>
-<pre class="bitmap"><code>[1] &quot;196.5 Mb&quot;</code></pre>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true"></a><span class="co"># Faster to load from a cache</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true"></a><span class="kw">saveRDS</span>(font, <span class="st">&quot;unifont.rds&quot;</span>)</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true"></a><span class="kw">system.time</span>(font &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;unifont.rds&quot;</span>))</span></code></pre></div>
+101.054   0.180 101.259 </code></pre>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(font) <span class="sc">|&gt;</span> <span class="fu">prettyNum</span>(<span class="at">big.mark =</span> <span class="st">&quot;,&quot;</span>) <span class="co"># number of glyphs</span></span></code></pre></div>
+<pre class="bitmap"><code>[1] &quot;125,472&quot;</code></pre>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">object.size</span>(font) <span class="sc">|&gt;</span> <span class="fu">format</span>(<span class="at">units =</span> <span class="st">&quot;MB&quot;</span>) <span class="co"># memory used</span></span></code></pre></div>
+<pre class="bitmap"><code>[1] &quot;198.7 Mb&quot;</code></pre>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Faster to load from a cache</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(font <span class="ot">&lt;-</span> <span class="fu">unifont</span>(<span class="at">cache =</span> <span class="cn">TRUE</span>))</span></code></pre></div>
 <pre class="bitmap"><code>   user  system elapsed 
-  0.730   0.004   0.734 </code></pre>
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true"></a><span class="co"># Or just load the subset of GNU Unifont you need</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true"></a>s &lt;-<span class="st"> &quot;Ｒ很棒！&quot;</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true"></a><span class="kw">system.time</span>(font_s &lt;-<span class="st"> </span><span class="kw">unifont</span>(<span class="dt">ucp =</span> <span class="kw">str2ucp</span>(s)))</span></code></pre></div>
+  0.708   0.000   0.707 </code></pre>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Or just load the subset of GNU Unifont you need</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="st">&quot;Ｒ很棒！&quot;</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(font_s <span class="ot">&lt;-</span> <span class="fu">unifont</span>(<span class="at">ucp =</span> <span class="fu">str2ucp</span>(s)))</span></code></pre></div>
 <pre class="bitmap"><code>   user  system elapsed 
-  0.690   0.004   0.695 </code></pre>
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true"></a><span class="co"># Mandarin Chinese</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true"></a><span class="kw">as_bm_bitmap</span>(s, <span class="dt">font =</span> font_s) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
+  0.644   0.000   0.644 </code></pre>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mandarin Chinese</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">as_bm_bitmap</span>(s, <span class="at">font =</span> font_s) <span class="sc">|&gt;</span> <span class="fu">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
 <pre class="bitmap"><code>                    █ ▄▄▄▄▄▄▄      █      █                     
    ▄▄▄▄▄▄▄        ▄▀  █     █      █  ▀▀▀▀█▀▀▀▀      ▄█▄        
     █     ▀▄     ▀  █ █▀▀▀▀▀█   ▀▀▀█▀▀ ▀▀█▀▀▀▀       ███        
@@ -602,8 +586,8 @@ pre,code {
     █    ▀▄        █  █   █▀    ▀  █    ▀▀█▀▀                   
    ▄█▄    ▄█▄      █  █ ▄  ▀▄      █  ▀▀▀▀█▀▀▀▀       █         
                    █  █▀     ▀▀    █      █                     </code></pre>
-<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true"></a><span class="co"># Emoji</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true"></a><span class="kw">as_bm_bitmap</span>(<span class="st">&quot;🐭🐲🐵&quot;</span>, <span class="dt">font =</span> font) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span><span class="kw">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Emoji</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">as_bm_bitmap</span>(<span class="st">&quot;🐭🐲🐵&quot;</span>, <span class="at">font =</span> font) <span class="sc">|&gt;</span> <span class="fu">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
 <pre class="bitmap"><code>  ▄▄       ▄▄           ▄▄▄            ▄▄       
 ▄▀  ▀▄▄▄▄▄▀  ▀▄       ▄█▀           ▄█▀██▀█▄    
 █    ▀   ▀    █      ▄████       ▄▀█ ▄▄  ▄▄ █▀▄ 
@@ -612,11 +596,11 @@ pre,code {
   ▀▄  ▀▀▀  ▄▀   ▀▀▀▀▀███▀▀█████    █ ▀▄▄▄▄▀ █   
     ▀▀▄▄▄▀▀        ▄███   ████▀     ▀▀▄▄▄▄▀▀    
                   ▀▀▀     ▀▀▀                   </code></pre>
-<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true"></a><span class="co"># Klingon</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true"></a><span class="kw">as_bm_list</span>(<span class="st">&quot;&quot;</span>, <span class="dt">font =</span> font) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true"></a><span class="st">    </span><span class="kw">bm_pad</span>(<span class="dt">type =</span> <span class="st">&quot;trim&quot;</span>, <span class="dt">left =</span> 1L, <span class="dt">right =</span> 1L) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true"></a><span class="st">    </span><span class="kw">bm_call</span>(cbind) <span class="op">|</span><span class="er">&gt;</span></span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true"></a><span class="st">    </span><span class="kw">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Klingon</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="fu">as_bm_list</span>(<span class="st">&quot;&quot;</span>, <span class="at">font =</span> font) <span class="sc">|&gt;</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bm_pad</span>(<span class="at">type =</span> <span class="st">&quot;trim&quot;</span>, <span class="at">left =</span> 1L, <span class="at">right =</span> 1L) <span class="sc">|&gt;</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bm_call</span>(cbind) <span class="sc">|&gt;</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bm_compress</span>(<span class="st">&quot;v&quot;</span>)</span></code></pre></div>
 <pre class="bitmap"><code>                                                                              
     ▄█▄ ▄▄██▀▀  ▀▀████████               ▄▀       ▄█▄    ▄█▀  ▀█▄    ▄▄       
  ▄▄██████▀            ▀██ ▀            ▄█▀       ███▀▀  ███    ██   ▀████████ 
